@@ -309,11 +309,11 @@ public class JSONObject {
 						default:
 							try {
 #if USEFLOAT
-								n = System.Convert.ToSingle(str);
+								n = System.Convert.ToSingle(str, System.Globalization.CultureInfo.InvariantCulture);
 #else
-								n = System.Convert.ToDouble(str);				 
+								n = System.Convert.ToDouble(str, System.Globalization.CultureInfo.InvariantCulture);				 
 #endif
-								type = Type.NUMBER;
+                                type = Type.NUMBER;
 							} catch(System.FormatException) {
 								type = Type.NULL;
 								Debug.LogWarning("improper JSON formatting:" + str);

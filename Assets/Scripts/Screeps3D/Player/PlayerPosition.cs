@@ -39,7 +39,7 @@ namespace Screeps3D.Player
             YCoord = _yPos >= 0 ? _yPos : -_yPos - 1;
             
             RoomName = string.Format("{0}{1}{2}{3}", XDir, XCoord, YDir, YCoord);
-            ShardName = string.Format("shard{0}", ShardLevel);
+            ShardName = string.Format("shard{0}", ShardLevel); // TODO: this is wrong when a custom shardname has been used.
             Room = RoomManager.Instance.Get(RoomName, ShardName);
 
             if (OnRoomChange != null)

@@ -28,6 +28,7 @@ namespace Screeps_API
         public IEnumerator<UnityWebRequestAsyncOperation> Request(string requestMethod, string path, RequestBody body = null,
             Action<string> onSuccess = null, Action onError = null, int timeout = 0, bool skipAuth = false, bool noNotification = false)
         {
+            // TODO: all theese requests needs to be queued to not hit request limits
             //Debug.Log(string.Format("HTTP: attempting {0} to {1}", requestMethod, path));
             UnityWebRequest www;
             var fullPath = path.StartsWith("/api") ? ScreepsAPI.Cache.Address.Http(path) : path;
@@ -280,6 +281,17 @@ namespace Screeps_API
             body.AddField("name", name);
 
             return Request("POST", "/api/game/check-unique-flag-name", body, onSuccess: onSuccess, noNotification: noNotification);
+        }
+
+        /* Experimental */
+        public IEnumerator<UnityWebRequestAsyncOperation> GetExperimentalNukes(Action<string> onSuccess)
+        {
+            /*
+             // https://screeps.com/api/experimental/nukes
+             // for PS it requires screepsmod-admin-utils or another mod that implements the endpoint
+            */
+
+            return Request("GET", "/api/experimental/nukes", onSuccess: onSuccess);
         }
     }
 }

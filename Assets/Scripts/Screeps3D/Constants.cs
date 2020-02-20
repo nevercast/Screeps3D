@@ -234,5 +234,8 @@ namespace Screeps3D
             "essence",
 
         }; 
+
+        public static int NUKE_ROOM_RANGE = 10;
+        public static int NUKE_TRAVEL_TICKS = 50000;
     }
 }

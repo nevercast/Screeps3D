@@ -2858,6 +2858,56 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7370177134310761323, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.23527564
+      objectReference: {fileID: 0}
+    - target: {fileID: 7370177134310761323, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.6193413
+      objectReference: {fileID: 0}
+    - target: {fileID: 7370177134310761323, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.20202501
+      objectReference: {fileID: 0}
+    - target: {fileID: 7370177134310761323, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.721282
+      objectReference: {fileID: 0}
+    - target: {fileID: 5969617668803457391, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 277934125348194839, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.12596983
+      objectReference: {fileID: 0}
+    - target: {fileID: 277934125348194839, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.008022411
+      objectReference: {fileID: 0}
+    - target: {fileID: 277934125348194839, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.0010264349
+      objectReference: {fileID: 0}
+    - target: {fileID: 277934125348194839, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.9920011
+      objectReference: {fileID: 0}
+    - target: {fileID: 5905221954924277299, guid: b160c84bf34bac4438bd206d7bcfb48f,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b160c84bf34bac4438bd206d7bcfb48f, type: 3}
 --- !u!1001 &8731088351693899085
