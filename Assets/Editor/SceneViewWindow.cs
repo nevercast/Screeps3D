@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Assets.Editor
@@ -42,20 +43,30 @@ namespace Assets.Editor
                 var scene = EditorBuildSettings.scenes[i];
                 if (scene.enabled)
                 {
-                    var sceneName = Path.GetFileNameWithoutExtension(scene.path);
-                    var pressed = GUILayout.Button(i + ": " + sceneName, new GUIStyle(GUI.skin.GetStyle("Button")) { alignment = TextAnchor.MiddleLeft });
-                    if (pressed)
-                    {
-                        if (EditorApplication.SaveCurrentSceneIfUserWantsTo())
-                        {
-                            EditorApplication.OpenScene(scene.path);
-                        }
-                    }
+                    AddSceneButton(i, scene.path);
                 }
             }
 
+            GUILayout.Label("Other Scenes", EditorStyles.boldLabel);
+            var index = EditorBuildSettings.scenes.Length;
+            
+            AddSceneButton(index++, "Assets/Scenes/RoomObjects.unity");
+
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
+        }
+
+        private static void AddSceneButton(int i, string path)
+        {
+            var sceneName = Path.GetFileNameWithoutExtension(path);
+            var pressed = GUILayout.Button(i + ": " + sceneName, new GUIStyle(GUI.skin.GetStyle("Button")) { alignment = TextAnchor.MiddleLeft });
+            if (pressed)
+            {
+                if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                {
+                    EditorSceneManager.OpenScene(path);
+                }
+            }
         }
     }
 }
