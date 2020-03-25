@@ -23,31 +23,48 @@ namespace Screeps3D.RoomObjects
       "off": false
     }*/
 
-    public class Spawn : OwnedStoreStructure//, IEnergyObject
+    public class Spawn : OwnedStoreStructure, INamedObject //, IEnergyObject
     {
         public string SpawningName { get; set; }
         public float SpawningNeedTime { get; set; }
-        public float SpawningRemainingTime { get; set; }
+
+        public int SpawningSpawnTime { get; set; }
+        public string Name { get; set; }
 
         internal override void Unpack(JSONObject data, bool initial)
         {
-            base.Unpack(data, initial);
-
-            if (!data.HasField("spawning"))
+            if (data.keys.Count == 0)
             {
-                SpawningName = null;
                 return;
             }
 
-            var spawningData = data["spawning"];
-            if (spawningData.HasField("name"))
-                SpawningName = spawningData["name"].str;
+            base.Unpack(data, initial);
 
-            if (spawningData.HasField("needTime"))
-                SpawningNeedTime = spawningData["needTime"].n;
+            UnpackUtility.Name(this, data);
 
-            if (spawningData.HasField("remainingTime"))
-                SpawningRemainingTime = spawningData["remainingTime"].n;
+            if (data.HasField("spawning"))
+            {
+                var spawningData = data["spawning"];
+
+                if (spawningData.IsNull)
+                {
+                    SpawningName = null;
+                    SpawningNeedTime = 0;
+                    SpawningSpawnTime = 0;
+                    return;
+                }
+
+                if (spawningData.HasField("name"))
+                    SpawningName = spawningData["name"].str;
+
+                if (spawningData.HasField("needTime"))
+                    SpawningNeedTime = spawningData["needTime"].n;
+
+                if (spawningData.HasField("spawnTime"))
+                {
+                    SpawningSpawnTime = (int)spawningData["spawnTime"].n;
+                }
+            }
         }
     }
 }
