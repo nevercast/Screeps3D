@@ -22,12 +22,13 @@ namespace Screeps3D.Rooms
         [SerializeField] private TMP_Dropdown _shardInput;
         [SerializeField] private TMP_InputField _roomInput;
         [SerializeField] private Toggle _pvpSpectateToggle;
+        [SerializeField] private Toggle _SpectateToggle;
         //[SerializeField] private GameObject _roomList;
         [SerializeField] private VerticalPanelElement _roomList;
         private bool showRoomList;
         [SerializeField] private GameObject _roomListContent;
-        
 
+        private readonly string _prefSpectateToggle = "SpectateToggle";
         private readonly string _prefPvpSpectateToggle = "PvpSpectateToggle";
         private readonly string _prefShard = "shard";
         private readonly string _prefRoom = "room";
@@ -41,16 +42,19 @@ namespace Screeps3D.Rooms
         private Dictionary<string, List<string>> _shardRooms = new Dictionary<string, List<string>>();
 
         private IEnumerator _findPvpRooms;
+        private IEnumerator _findPlayerOwnedRooms;
 
         private void Start()
         {
             random = new System.Random();
             _pvpSpectateToggle.isOn = PlayerPrefs.GetInt(_prefPvpSpectateToggle, 1) == 1;
+            _SpectateToggle.isOn = PlayerPrefs.GetInt(_prefSpectateToggle, 1) == 1;
             _shardInput.onValueChanged.AddListener(OnSelectedShardChanged);
             _roomInput.onSubmit.AddListener(OnSelectedRoomChanged);
             _roomInput.onSelect.AddListener(OnToggleRoomList);
             _roomInput.onDeselect.AddListener(OnToggleRoomList);
             _pvpSpectateToggle.onValueChanged.AddListener(OnTogglePvpSpectate);
+            _SpectateToggle.onValueChanged.AddListener(OnToggleSpectate);
 
             if (ScreepsAPI.IsConnected)
             {
@@ -79,6 +83,22 @@ namespace Screeps3D.Rooms
             }
         }
 
+        private void OnToggleSpectate(bool isOn)
+        {
+            PlayerPrefs.SetInt(_prefSpectateToggle, isOn ? 1 : 0);
+
+            if (isOn)
+            {
+                // TODO: Find player owned rooms
+                _findPlayerOwnedRooms = FindPlayerOwnedRoom();
+                StartCoroutine(_findPlayerOwnedRooms);
+            }
+            else
+            {
+                StopCoroutine(_findPlayerOwnedRooms);
+            }
+        }
+
         private IEnumerator FindPvpRoom()
         {
 
@@ -99,6 +119,24 @@ namespace Screeps3D.Rooms
 
                     throw;
                 }
+
+                yield return new WaitForSeconds(30);
+            }
+        }
+
+        private IEnumerator FindPlayerOwnedRoom()
+        {
+            while (true)
+            {
+                var ownedRooms = MapStatsUpdater.Instance.RoomInfo.Values.Where(r => r.User != null
+                                                                                     && r.User.UserId == ScreepsAPI.Me.UserId);
+                var random = new System.Random();
+                var room = ownedRooms.ElementAt(random.Next(ownedRooms.Count()));
+                var roomName = room?.RoomName;
+
+                Debug.Log($"Going to room {roomName} owned by {room?.User?.Username}");
+                _roomInput.text = roomName;
+                this.GetAndChooseRoom(roomName);
 
                 yield return new WaitForSeconds(30);
             }
