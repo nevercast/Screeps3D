@@ -60,7 +60,8 @@ namespace Screeps3D.Tools.Selection.Subpanels
 
         private void OnDelta(JSONObject obj)
         {
-            var hasChanged = obj.keys.Any(k => Constants.ResourcesAll.Contains(k));
+            var store = obj.HasField("store") ? obj["store"] : obj; // this supports both PRE and POST store update
+            var hasChanged = store.keys.Any(k => Constants.ResourcesAll.Contains(k));
             
             if (hasChanged)
                 UpdateLabel();
