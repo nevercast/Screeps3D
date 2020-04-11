@@ -79,7 +79,10 @@ namespace Screeps3D.Rooms
             }
             else
             {
-                StopCoroutine(_findPvpRooms);
+                if (_findPvpRooms != null)
+                {
+                    StopCoroutine(_findPvpRooms);
+                }
             }
         }
 
@@ -95,7 +98,10 @@ namespace Screeps3D.Rooms
             }
             else
             {
-                StopCoroutine(_findPlayerOwnedRooms);
+                if (_findPlayerOwnedRooms != null)
+                {
+                    StopCoroutine(_findPlayerOwnedRooms);
+                }
             }
         }
 
@@ -203,14 +209,14 @@ namespace Screeps3D.Rooms
 
         private void ChooseRandomOwnedRoom()
         {
-                var ownedRooms = MapStatsUpdater.Instance.RoomInfo.Values.Where(r => r.User != null && r.Level.HasValue && r.Level > 0);
-                var random = new System.Random();
-                var room = ownedRooms.ElementAt(random.Next(ownedRooms.Count()));
-                var roomName = room?.RoomName;
+            var ownedRooms = MapStatsUpdater.Instance.RoomInfo.Values.Where(r => r.User != null && r.Level.HasValue && r.Level > 0);
+            var random = new System.Random();
+            var room = ownedRooms.ElementAt(random.Next(ownedRooms.Count()));
+            var roomName = room?.RoomName;
 
-                Debug.Log($"Going to room {roomName} owned by {room?.User?.Username}");
-                _roomInput.text = roomName;
-                this.GetAndChooseRoom(roomName);
+            Debug.Log($"Going to room {roomName} owned by {room?.User?.Username}");
+            _roomInput.text = roomName;
+            this.GetAndChooseRoom(roomName);
         }
 
         public void OnSelectedShardChanged(string shardName)
