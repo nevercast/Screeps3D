@@ -19,9 +19,9 @@ namespace Screeps3D.RoomObjects.Views
 
         public void Delta(JSONObject data)
         {
-            if (_extension.TotalCapacity >= 200)
+            if (_extension?.TotalCapacity >= 200)
                 _size.SetVisibility(0.85f);
-            else if (_extension.TotalCapacity >= 100)
+            else if (_extension?.TotalCapacity >= 100)
                 _size.SetVisibility(0.65f);
             else
                 _size.SetVisibility(0.5f);

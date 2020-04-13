@@ -20,32 +20,34 @@ namespace Screeps3D.RoomObjects.Views
             _energyObject = roomObject as IEnergyObject;
             _storeObject = roomObject as IStoreObject;
 
-            AdjustScale();
+            AdjustScale(true);
         }
 
         public void Delta(JSONObject data)
         {
-            AdjustScale();
+            AdjustScale(false);
         }
 
         public void Unload(RoomObject roomObject)
         {
         }
 
-        private void AdjustScale()
+        private void AdjustScale(bool instant)
         {
+            var visibility = 0f;
             if (_energyObject != null)
             {
-                _energyDisplay.SetVisibility(_energyObject.Energy / _energyObject.EnergyCapacity);
+                visibility = _energyObject.Energy / _energyObject.EnergyCapacity;
             }
-
-            if (_storeObject != null)
+            else if (_storeObject != null)
             {
                 float energy;
                 _storeObject.Store.TryGetValue(Constants.TypeResource, out energy);
 
-                _energyDisplay.SetVisibility(energy / _storeObject.TotalCapacity);
+                visibility = energy / _storeObject.TotalCapacity;
             }
+
+            _energyDisplay.SetVisibility(visibility, instant);
         }
     }
 }

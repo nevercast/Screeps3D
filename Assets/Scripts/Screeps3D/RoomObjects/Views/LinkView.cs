@@ -20,6 +20,11 @@ namespace Screeps3D.RoomObjects.Views
 
         public void Delta(JSONObject data)
         {
+            if (_link == null)
+            {
+                return;
+            }
+
             var action = _link.Actions["transferEnergy"];
             if (action.IsNull) return;
 

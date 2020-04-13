@@ -33,19 +33,22 @@ namespace Screeps3D.RoomObjects.Views
         {
             AdjustScale();
 
-            var action = _tower.Actions.FirstOrDefault(c => !c.Value.IsNull);
-            if (action.Value == null)
+            if (_tower != null)
             {
-                _idle = true;
-                return; // Early
-            }
-            _idle = false;
-            if (_rotator != null) StopCoroutine(_rotator);
+                var action = _tower.Actions.FirstOrDefault(c => !c.Value.IsNull);
+                if (action.Value == null)
+                {
+                    _idle = true;
+                    return; // Early
+                }
+                _idle = false;
+                if (_rotator != null) StopCoroutine(_rotator);
 
-            var endPos = PosUtility.Convert(action.Value, _tower.Room);
-            _rotationRoot.rotation = Quaternion.LookRotation(endPos - _tower.Position);
-            var color = action.Key == "attack" ? Color.blue : action.Key == "heal" ? Color.green : Color.yellow;
-            EffectsUtility.Beam(_tower, action.Value, new BeamConfig(color, 0.6f, 0.3f));
+                var endPos = PosUtility.Convert(action.Value, _tower.Room);
+                _rotationRoot.rotation = Quaternion.LookRotation(endPos - _tower.Position);
+                var color = action.Key == "attack" ? Color.blue : action.Key == "heal" ? Color.green : Color.yellow;
+                EffectsUtility.Beam(_tower, action.Value, new BeamConfig(color, 0.6f, 0.3f));
+            }
             // StartCoroutine(Beam.Draw(_tower, action.Value, _lineRenderer, new BeamConfig(color, 0.6f, 0.3f)));
         }
 
@@ -55,11 +58,21 @@ namespace Screeps3D.RoomObjects.Views
 
         private void AdjustScale()
         {
-            _energyDisplay.SetVisibility(_tower.TotalResources / _tower.TotalCapacity);
+            if (_tower != null)
+            {
+                _energyDisplay.SetVisibility(_tower.TotalResources / _tower.TotalCapacity);
+            }
         }
 
         private void Update()
         {
+            if (_tower == null)
+            {
+                // A ruin tower should not rotate. 
+                // TODO: perhaps we want it to point downwards towards the ground?
+                return;
+            }
+
             if (!_idle || _rotating || !(Time.time > _nextRot)) return; // Early
             
             _rotator = Rotate();

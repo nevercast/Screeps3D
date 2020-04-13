@@ -18,19 +18,36 @@ namespace Screeps3D.RoomObjects.Views
         {
             _rampart = roomObject as Rampart;
 
-            // Enemy rampart detection
-            if (_rampart.Owner.UserId != ScreepsAPI.Me.UserId) // TODO: isNPC?
-            {
-                renderer.material.SetColor("_Color", new Color(1.000f, 0f, 0f, 0.053f));
-                renderer.material.SetColor("_EmissionColor", new Color(0.400f, 0f, 0f, 0.278f));
+            var owner = _rampart?.Owner;
 
-            }
-            else
+            if (_rampart == null)
             {
-                // Owned rampart color, extracted from debug.log
-                renderer.material.SetColor("_Color", new Color(0.000f, 1.000f, 0.297f, 0.053f));
-                renderer.material.SetColor("_EmissionColor", new Color(0.000f, 0.400f, 0.119f, 0.278f));
+                var ownedObject = roomObject as IOwnedObject;
+
+                owner = ownedObject?.Owner;
             }
+
+            bool ownedByMe = owner?.UserId != ScreepsAPI.Me.UserId; // TODO: isNPC?;
+
+            var color = new Color(0.000f, 1.000f, 0.297f, 0.053f); // enemy
+            var emissionColor = new Color(0.000f, 0.400f, 0.119f, 0.278f); // enemy;
+
+
+            if (ownedByMe)
+            {
+                color = new Color(1.000f, 0f, 0f, 0.053f);
+                emissionColor = new Color(0.400f, 0f, 0f, 0.278f);
+            }
+
+            if (_rampart == null)
+            {
+                // Should only happen for ruins
+                //renderer.material.SetColor("_Color", Color.grey);
+                //renderer.material.SetColor("_EmissionColor", Color.grey);
+            }
+
+            renderer.material.SetColor("_Color", color);
+            renderer.material.SetColor("_EmissionColor", emissionColor);
         }
 
         public void Delta(JSONObject data)

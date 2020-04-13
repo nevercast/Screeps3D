@@ -29,11 +29,15 @@ namespace Screeps3D.RoomObjects.Views
 
         public void Delta(JSONObject data)
         {
+            if (_powerBank == null)
+            {
+                return;
+            }
             var power = _Power > 0 ? _Power : _powerBank.Power;
             var percentage = power / _powerBank.PowerCapacity;
 
             var minVisibility = 0.001f; /*to keep it visible and selectable, also allows the resource to render again when regen hits*/
-            
+
             float visibility = percentage == 0 ? minVisibility : percentage;
 
             _powerScaleVisibility.SetVisibility(visibility);

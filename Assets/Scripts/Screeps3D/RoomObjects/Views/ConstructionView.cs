@@ -32,8 +32,12 @@ namespace Screeps3D.RoomObjects.Views
         private void UpdateFill()
         {
             var fillAmount = 0f;
-            if (_site.ProgressMax > 0)
+
+            if (_site != null && _site.ProgressMax > 0)
+            {
                 fillAmount = _site.Progress / _site.ProgressMax;
+            }
+
             _fillTarget = fillAmount;
         }
 

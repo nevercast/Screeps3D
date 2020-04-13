@@ -29,7 +29,10 @@ namespace Screeps3D.RoomObjects.Views
 
         private void AdjustScale()
         {
-            _energyDisplay.SetVisibility(_container.TotalResources / _container.TotalCapacity);
+            if (_container != null)
+            {
+                _energyDisplay.SetVisibility(_container.TotalResources / _container.TotalCapacity);
+            }
         }
     }
 }
