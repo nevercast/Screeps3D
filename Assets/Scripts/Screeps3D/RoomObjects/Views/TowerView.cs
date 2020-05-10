@@ -6,16 +6,22 @@ using UnityEngine;
 
 namespace Screeps3D.RoomObjects.Views
 {
-    public class TowerView : MonoBehaviour, IObjectViewComponent
+    public class TowerView : ObjectView, IObjectViewComponent
     {
         [SerializeField] private ScaleAxes _energyDisplay;
+        [SerializeField] private Renderer _base;
+        [SerializeField] private Renderer _stand;
+        [SerializeField] private Renderer _body;
         [SerializeField] private Transform _rotationRoot;
         private Quaternion _targetRot;
         private bool _idle;
+        private float _time;
         private float _nextRot;
         private bool _rotating;
         private Tower _tower;
+        private Color _actionColor;
         private LineRenderer _lineRenderer;
+        private IEnumerator _powerUp;
         private IEnumerator _rotator;
 
         public void Init()
@@ -23,9 +29,22 @@ namespace Screeps3D.RoomObjects.Views
             _lineRenderer = gameObject.GetComponent<LineRenderer>();
         }
 
+        private void setEmission(Color color, float strength) {
+
+            _base.material.SetFloat("EmissionStrength", strength);
+            _base.material.SetColor("EmissionColor", color);
+
+            _body.material.SetFloat("EmissionStrength", strength);
+            _body.material.SetColor("EmissionColor", color);
+
+            _stand.material.SetFloat("EmissionStrength", strength);
+            _stand.material.SetColor("EmissionColor", color);            
+        }
+
         public void Load(RoomObject roomObject)
         {
             _tower = roomObject as Tower;
+            _time = 0f;
             AdjustScale();
         }
 
@@ -46,8 +65,11 @@ namespace Screeps3D.RoomObjects.Views
 
                 var endPos = PosUtility.Convert(action.Value, _tower.Room);
                 _rotationRoot.rotation = Quaternion.LookRotation(endPos - _tower.Position);
-                var color = action.Key == "attack" ? Color.blue : action.Key == "heal" ? Color.green : Color.yellow;
-                EffectsUtility.Beam(_tower, action.Value, new BeamConfig(color, 0.6f, 0.3f));
+                _actionColor = action.Key == "attack" ? Color.blue : action.Key == "heal" ? Color.green : Color.yellow;
+                EffectsUtility.Beam(_tower, action.Value, new BeamConfig(_actionColor, 0.6f, 0.3f));
+                
+                _powerUp = PowerUp();
+                StartCoroutine(_powerUp);
             }
             // StartCoroutine(Beam.Draw(_tower, action.Value, _lineRenderer, new BeamConfig(color, 0.6f, 0.3f)));
         }
@@ -73,8 +95,14 @@ namespace Screeps3D.RoomObjects.Views
                 return;
             }
 
-            if (!_idle || _rotating || !(Time.time > _nextRot)) return; // Early
-            
+            if(_idle) {
+                setEmission(Color.black, 0f);
+            }
+
+            if (!_idle || _rotating || !(Time.time > _nextRot ))  {
+                return; // Early
+            }            
+
             _rotator = Rotate();
             StartCoroutine(_rotator);
         }
@@ -93,5 +121,21 @@ namespace Screeps3D.RoomObjects.Views
             _rotating = false;
         }
 
+        private IEnumerator PowerUp() {
+            var targetEmission = 150;
+            setEmission(_actionColor, 0f);
+            // powerUp - brightness up
+            while (_base.material.GetFloat("EmissionStrength") < targetEmission)
+            {    
+                setEmission(_actionColor, _base.material.GetFloat("EmissionStrength") +15f);
+                yield return null;
+            }
+            // powerUp - wind down
+            while (_base.material.GetFloat("EmissionStrength") > 0)
+            {    
+                setEmission(_actionColor, _base.material.GetFloat("EmissionStrength") -5f);
+                yield return null;
+            }
+        }
     }
 }

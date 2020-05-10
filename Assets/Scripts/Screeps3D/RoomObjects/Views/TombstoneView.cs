@@ -1,4 +1,7 @@
-﻿using Screeps3D.Effects;
+﻿using System.Collections;
+using System.Linq;
+using Common;
+using Screeps3D.Effects;
 using UnityEngine;
 
 namespace Screeps3D.RoomObjects.Views
@@ -12,15 +15,17 @@ namespace Screeps3D.RoomObjects.Views
         private Vector3 _posTarget;
         private Vector3 _posRef;
         private Tombstone _tombstone;
+        private IEnumerator _blink;
+        private float _nextBlink;
+        private bool _blinking;
 
         internal override void Load(RoomObject roomObject)
         {
             base.Load(roomObject);
             _tombstone = roomObject as Tombstone;
-            _body.materials[1].SetTexture("ColorTexture", _tombstone?.Owner?.Badge); // main texture
-            _body.materials[1].SetColor("BaseColor", new Color(0.8f,0.8f,0.8f,1f));
-            _body.materials[1].SetFloat("ColorMix", 1);
-            _body.materials[1].SetFloat("EmissionStrength", 0.5f);
+            _body.materials[1].SetColor("EmissionColor", new Color(0.7f, 0.7f, 0.7f, 1f));
+            _body.materials[1].SetTexture("EmissionTexture", _tombstone?.Owner?.Badge);
+            _body.materials[1].SetFloat("EmissionStrength", 5f);
 
             _rotTarget = transform.rotation;
             _posTarget = roomObject.Position;
@@ -36,6 +41,7 @@ namespace Screeps3D.RoomObjects.Views
         {
             base.Delta(data);
 
+
             //var posDelta = _posTarget - RoomObject.Position;
 
             //if (posDelta.sqrMagnitude > .01)
@@ -46,10 +52,41 @@ namespace Screeps3D.RoomObjects.Views
 
         private void Update()
         {
-            if (_tombstone == null)
+            if (_tombstone == null) {
+                if(_blinking != null) {
+                    StopCoroutine(_blink);
+                }
                 return;
+            }
+
+            if(_blinking || Time.time < _nextBlink ) {
+                return;
+            }
+            
+            _blink = Blink();
+            StartCoroutine(_blink);
             //transform.localPosition = Vector3.SmoothDamp(transform.localPosition, _posTarget, ref _posRef, .5f);
             //_rotationRoot.transform.rotation = Quaternion.Slerp(_rotationRoot.transform.rotation, _tombstone.Rotation, Time.deltaTime * 5);
         }
+
+        private IEnumerator Blink()
+        {
+            float min = 2f;
+            float max = 8f;
+            _blinking = true;
+            while (_body.materials[1].GetFloat("EmissionStrength") < max)
+            {
+                _body.materials[1].SetFloat("EmissionStrength", _body.materials[1].GetFloat("EmissionStrength") + 0.1f);
+                yield return null;
+            }
+            while (_body.materials[1].GetFloat("EmissionStrength") > min)
+            {
+                _body.materials[1].SetFloat("EmissionStrength", _body.materials[1].GetFloat("EmissionStrength") - 0.1f);
+                yield return null;
+            }
+            _nextBlink = Time.time + Random.value + 1;
+            _blinking = false;
+        }
+        
     }
 }
