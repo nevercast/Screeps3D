@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Common;
 using Screeps3D;
@@ -59,6 +60,21 @@ namespace Screeps_API
 
             Action<UnityWebRequest> onComplete = (UnityWebRequest outcome) =>
             {
+                var responseHeaders = outcome.GetResponseHeaders();
+
+                var rateLimitHeaders = responseHeaders.Where(x => x.Key.StartsWith("X-RateLimit"));
+                var rateLimitDebug = new StringBuilder();
+
+                if (rateLimitHeaders.Any())
+                {
+                    foreach (var header in rateLimitHeaders)
+                    {
+                        rateLimitDebug.AppendLine($"{header.Key}: {header.Value}");
+                    }
+
+                    Debug.Log(rateLimitDebug.ToString()); 
+                }
+
                 if (outcome.isNetworkError || outcome.isHttpError)
                 {
                     // TODO: rate limit https://github.com/screepers/node-screeps-api/blob/4e15d49c45e9b5cc3808122db6597c2d45537cb5/src/RawAPI.js#L389-L405
@@ -184,7 +200,7 @@ namespace Screeps_API
             return Request("GET", "/api/version", onSuccess: onSuccess, onError: onError, timeout: 2, skipAuth: true, noNotification: noNotification);
         }
 
-        public IEnumerator<UnityWebRequestAsyncOperation> GetMapStats(List<string> rooms, string shard, string statName, Action<string> onSuccess, bool noNotification = false)
+        public IEnumerator<UnityWebRequestAsyncOperation> GetMapStats(List<string> rooms, string shard, string statName, Action<string, string> onSuccess, bool noNotification = false)
         {
             /*
              https://github.com/screepers/node-screeps-api/blob/HEAD/docs/Endpoints.md
@@ -204,7 +220,11 @@ namespace Screeps_API
             body.AddField("statName", statName);
             body.AddField("shard", shard);
 
-            return Request("POST", "/api/game/map-stats", body, onSuccess: onSuccess, noNotification: noNotification);
+            Action<string> onRequestSuccess = (json) => {
+                onSuccess(shard, json);
+            };
+
+            return Request("POST", "/api/game/map-stats", body, onSuccess: onRequestSuccess, noNotification: noNotification);
         }
 
         public IEnumerator<UnityWebRequestAsyncOperation> GenerateUniqueFlagName(string shard, Action<string> onSuccess, bool noNotification = false)

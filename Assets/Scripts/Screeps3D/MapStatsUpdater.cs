@@ -19,10 +19,17 @@ namespace Screeps3D
             StartCoroutine(Scan());
         }
 
-        public Dictionary<string, RoomInfo> RoomInfo { get; } = new Dictionary<string, RoomInfo>();
+        public Dictionary<string, List<RoomInfo>> RoomInfo { get; } = new Dictionary<string, List<RoomInfo>>();
 
-        // TODO
-        public RoomInfo GetRoomInfo(string roomName) => RoomInfo.ContainsKey(roomName) ? RoomInfo[roomName] : null; // Do we need shardname support?
+        public RoomInfo GetRoomInfo(string shardName, string roomName)
+        {
+            if (RoomInfo.TryGetValue(shardName, out var shardRoomInfo))
+            {
+                return shardRoomInfo.SingleOrDefault(room => room.RoomName == roomName);
+            }
+
+            return null;
+        }
 
         public IEnumerator Scan()
         {
@@ -57,16 +64,37 @@ namespace Screeps3D
                 Debug.Log($"Waiting 60 seconds");
                 // https://docs.screeps.com/auth-tokens.html#Rate-Limiting
                 // POST /api/game/map-stats	60 / hour
-                yield return new WaitForSecondsRealtime(60);
+                yield return new WaitForSecondsRealtime(90); // wait a little longer to allow for cross shards lookups, untill we get a proper queue in place that respects rate limits
             }
         }
 
-        private void GetMapStatsCallback(string jsonString)
+        public void ScanRooms(string shardName, List<string> rooms, Action<string> onSuccess = null)
         {
-            StartCoroutine(UnpackMapStatsData(jsonString));
+            var distinctRooms = rooms.Distinct().ToList();
+            Debug.Log($"[{shardName}] Getting mapstats {distinctRooms.Count}"); // 10 seconds
+            
+            ScreepsAPI.Http.GetMapStats(distinctRooms, shardName, "owner0", (shard, jsonString) => {
+                var result = new JSONObject(jsonString);
+                while (UnpackUsers(result, false).MoveNext())
+                {
+
+                }
+
+                while (UnpackRooms(shard, result, false).MoveNext())
+                {
+
+                }
+
+                onSuccess?.Invoke(jsonString);
+            });
         }
 
-        private IEnumerator UnpackMapStatsData(string jsonString)
+        private void GetMapStatsCallback(string shard, string jsonString)
+        {
+            StartCoroutine(UnpackMapStatsData(shard, jsonString));
+        }
+
+        private IEnumerator UnpackMapStatsData(string shard, string jsonString)
         {
             Debug.Log($"Converting to jsonObject");
             var result = new JSONObject(jsonString); // 1 second
@@ -74,6 +102,11 @@ namespace Screeps3D
             yield return StartCoroutine(UnpackUsers(result)); // 14 seconds
             Debug.Log("Unpacking users done");
 
+            yield return UnpackRooms(shard, result);
+        }
+
+        private IEnumerator UnpackRooms(string shard, JSONObject result, bool wait = true)
+        {
             var stats = result["stats"];
             Debug.Log($"Unpacking rooms {stats?.keys?.Count}"); // 14 seconds
             var index = 0;
@@ -84,11 +117,17 @@ namespace Screeps3D
                 yield break;
             }
 
+            if (!RoomInfo.TryGetValue(shard, out var shardRoomInfo))
+            {
+                shardRoomInfo = new List<RoomInfo>();
+                RoomInfo.Add(shard, shardRoomInfo);
+            }
+
             foreach (var roomName in stats.keys)
             {
                 index++;
 
-                if (index % 100 == 0)
+                if (wait && index % 100 == 0)
                 {
                     //Debug.Log(index);
                     yield return new WaitForSeconds(0.1f);
@@ -96,11 +135,13 @@ namespace Screeps3D
 
 
                 // should we store this info on the room so it is available for others?
-                var roomInfo = RoomInfo.ContainsKey(roomName) ? RoomInfo[roomName] : null;
+
+
+                var roomInfo = shardRoomInfo.SingleOrDefault(info => info.RoomName == roomName);
                 if (roomInfo == null)
                 {
                     roomInfo = new RoomInfo(roomName);
-                    RoomInfo[roomName] = roomInfo;
+                    shardRoomInfo.Add(roomInfo);
                 }
 
                 roomInfo.Unpack(stats[roomName]);
@@ -110,7 +151,7 @@ namespace Screeps3D
             Debug.Log("Unpacking rooms done");
         }
 
-        private IEnumerator UnpackUsers(JSONObject data)
+        private IEnumerator UnpackUsers(JSONObject data, bool wait = true)
         {
             var usersData = data["users"];
             if (usersData == null)
@@ -129,7 +170,7 @@ namespace Screeps3D
             {
                 index++;
 
-                if (index % 10 == 0)
+                if (wait && index % 10 == 0)
                 {
                     //Debug.Log(index);
                     yield return new WaitForSeconds(0.1f);
