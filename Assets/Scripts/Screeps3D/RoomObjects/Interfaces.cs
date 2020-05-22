@@ -48,6 +48,11 @@ namespace Screeps3D.RoomObjects
         string ResourceType { get; set; }
     }
 
+    internal interface IDepositObject
+    {
+        string DepositType { get; set; }
+    }
+
     internal interface IRegenerationObject : IRoomObject
     {
         float NextRegenerationTime { get; set; }

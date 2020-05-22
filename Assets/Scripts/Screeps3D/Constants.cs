@@ -173,6 +173,19 @@ namespace Screeps3D
             public const string Zynthium = "Z";
             public const string Catalyst = "X";
         }
+        ////RESOURCE_SILICON: 'silicon',
+        ////RESOURCE_METAL: 'metal',
+        ////RESOURCE_BIOMASS: 'biomass',
+        ////RESOURCE_MIST: 'mist',
+        ///
+        public static class BaseDeposit
+        {
+            public const string Silicon = "silicon";
+            public const string Metal = "metal";
+            public const string Biomass = "biomass";
+            public const string Mist = "mist";
+        }
+
         // TODO: factory update? https://github.com/screeps/storage/blob/b045531aca745f0942293bd32e0bdb5813bc12e2/lib/db.js#L55
         // https://github.com/screeps/common/blob/c5b52a2550444e6e30599c51eff3a601c983267e/lib/constants.js#L384-L387
         // might need to verify that all resources are in fact present.

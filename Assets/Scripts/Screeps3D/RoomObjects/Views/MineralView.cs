@@ -9,7 +9,7 @@ namespace Screeps3D.RoomObjects.Views
 
         [SerializeField] private Renderer _mineral;
         [SerializeField] private Collider _collider;
-        [SerializeField] private new ScaleVisibility _vis;
+        [SerializeField] private ScaleVisibility _vis;
         //[SerializeField] private Transform _rotationRoot;
 
         private Quaternion _rotTarget;
@@ -66,7 +66,6 @@ namespace Screeps3D.RoomObjects.Views
 
                 _mineral.material.color = mineralcolor;
             }
-            //_body.material.mainTexture = _mineral.Owner.Badge;
 
             _rotTarget = transform.rotation;
             _posTarget = roomObject.Position;
