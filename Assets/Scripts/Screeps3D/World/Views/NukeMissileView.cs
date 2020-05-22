@@ -16,6 +16,8 @@ namespace Screeps3D.World.Views
 
         private bool nukeExploded = false;
 
+        private bool badgeSet = false;
+
         public void Init(WorldOverlay overlay)
         {
             Overlay = overlay as NukeMissileOverlay;
@@ -44,6 +46,9 @@ namespace Screeps3D.World.Views
             initialized = true;
             // spawn nuke explosion for testing purposes, not sure it belongs on the missile view? :shrugh: belongs in an "onTick" event or something
             //EffectsUtility.NukeExplosition(Overlay.ImpactPosition);
+
+            
+            
         }
 
         private void Update()
@@ -56,6 +61,21 @@ namespace Screeps3D.World.Views
             if (!initialized)
             {
                 return;
+            }
+
+            if (!badgeSet)
+            {
+                var launchRoomInfo = MapStatsUpdater.Instance.GetRoomInfo(Overlay.Shard, Overlay.LaunchRoomName);
+                if (launchRoomInfo != null)
+                {
+                    //_nuke.materials[3].SetTexture("EmissionTexture", launchRoomInfo.User?.Badge);
+                    //_nuke.materials[3].SetTexture("ColorTexture", launchRoomInfo.User?.Badge);
+                    //_nuke.materials[3].SetColor("EmissionColor", new Color(0.7f, 0.7f, 0.7f, 1f));
+                    //_nuke.materials[3].SetTexture("EmissionTexture", launchRoomInfo?.User?.Badge);
+                    //_nuke.materials[3].SetFloat("EmissionStrength", 2);
+                    _nuke.materials[3].SetTexture("_BaseColorMap", launchRoomInfo.User?.Badge);
+                    badgeSet = true;
+                }
             }
 
             // TODO: should we simulate movement / progress in between nukemonitor updates so the misile moves "smoothly"? this neeeds to be in update then. and not sure calling arcRenderer.Progress works, we then need a "targetProgress" or something like that, could let us inspire by creep movement between ticks
