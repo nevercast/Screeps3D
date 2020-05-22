@@ -76,12 +76,12 @@ namespace Screeps3D.RoomObjects.Views
         public int roomPosY { get; set; }
         public void Show()
         {
-            _powerScaleVisibility.Show();
+            _powerScaleVisibility?.Show();
             _collider.enabled = false;
         }
         public void Hide()
         {
-            _powerScaleVisibility.Hide();
+            _powerScaleVisibility?.Hide();
             _collider.enabled = true;
         }
     }
