@@ -68,21 +68,21 @@ namespace Screeps3D.RoomObjects
 
                 string alternative = null;
 
-                //switch (this.DepositType)
-                //{
-                //case Constants.BaseDeposit.Silicon:
-                //    alternative = "silicon";
-                //    break;
-                //case Constants.BaseDeposit.Metal:
-                //alternative = "metal";
-                //    break;
-                //case Constants.BaseDeposit.Biomass:
-                //alternative = "biomass";
-                //    break;
-                //case Constants.BaseDeposit.Mist:
-                alternative = "mist";
-                //    break;
-                //}
+                switch (this.DepositType)
+                {
+                    case Constants.BaseDeposit.Silicon:
+                        alternative = "silicon";
+                        break;
+                    case Constants.BaseDeposit.Metal:
+                        alternative = "metal";
+                        break;
+                    case Constants.BaseDeposit.Biomass:
+                        alternative = "biomass";
+                        break;
+                    case Constants.BaseDeposit.Mist:
+                        alternative = "mist";
+                        break;
+                }
 
                 if (alternative == null)
                 {
