@@ -30,4 +30,17 @@ public class Windows
         //proc.StartInfo.FileName = path + "/Screeps3D.exe";
         //proc.Start();
     }
+
+    public static void Release(string path, string version, string output)
+    {
+        UnityEngine.Debug.Log("Release: " + path);
+
+        Process proc = new Process();
+        proc.StartInfo.FileName = @"C:\Program Files\7-Zip\7zG.exe";
+        proc.StartInfo.Arguments = $"a -tzip {output}/Screeps3D_{version}_Windows_64.zip {path}/*";
+        //UnityEngine.Debug.Log(proc.StartInfo.Arguments);
+        proc.Start();
+        proc.WaitForExit(30000);
+        UnityEngine.Debug.Log("Release Finished: " + output);
+    }
 }

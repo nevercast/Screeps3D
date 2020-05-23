@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 public class BuildTools
 {
-    [MenuItem("Build Tools/Build All Platforms", priority = 1)]
+    [MenuItem("Build Tools/Release - All Platforms", priority = 1)]
     public static void BuildAllPlatforms()
     {
         AllPlatforms.Build();
