@@ -28,11 +28,11 @@ public class AllPlatforms
         var currentDirectory = Directory.GetCurrentDirectory();
         string path = $"{currentDirectory}/Build/{version}";
 
-        //Windows.BuildGame(path + "/Windows");
-        //Windows.Release(path + "/Windows", version.ToString(), releaseOutputFolder);
-        //Linux.BuildGame(path + "/Linux");
-        //Linux.Release(path + "/Linux", version.ToString(), releaseOutputFolder);
-        //Mac.BuildGame(path + "/Mac");
+        Windows.BuildGame(path + "/Windows");
+        Windows.Release(path + "/Windows", version.ToString(), releaseOutputFolder);
+        Linux.BuildGame(path + "/Linux");
+        Linux.Release(path + "/Linux", version.ToString(), releaseOutputFolder);
+        Mac.BuildGame(path + "/Mac");
         Mac.Release(path + "/Mac", version.ToString(), releaseOutputFolder);
 
         // Copy a file from the project folder to the build folder, alongside the built game.
