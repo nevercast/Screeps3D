@@ -107,6 +107,7 @@ namespace Screeps3D.RoomObjects
             UnpackUtility.ActionLog(this, data);
             UnpackUtility.Effects(this, data);
 			UnpackUtility.Level(this, data);
+            LevelMax = 5;
         }
     }
 }
