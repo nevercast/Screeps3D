@@ -65,10 +65,10 @@ namespace Screeps3D.RoomObjects.Views
 
         private void dimNotUsedLevels() {
             int level = 0;
-            if(_invadeCore.Level != null ) {
+            if(_invadeCore?.Level != null ) {
                 level = _invadeCore.Level;
             }
-            Debug.LogError("Invader core level " + level.ToString());
+            
             _topL5.enabled = level > 4;
             _topL4.enabled = level > 3;
             _topL3.enabled = level > 2;
