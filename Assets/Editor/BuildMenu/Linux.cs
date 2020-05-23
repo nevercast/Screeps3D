@@ -35,8 +35,6 @@ public class Linux
 
     public static void Release(string path, string version, string output)
     {
-        UnityEngine.Debug.Log("Release: " + path);
-
         // tar it
         Process proc = new Process();
         proc.StartInfo.FileName = @"C:\Program Files\7-Zip\7zG.exe";
@@ -52,7 +50,6 @@ public class Linux
         //UnityEngine.Debug.Log(proc.StartInfo.Arguments);
         ballProc.Start();
         ballProc.WaitForExit(30000);
-        UnityEngine.Debug.Log("Release Finished: " + output);
 
         FileUtil.DeleteFileOrDirectory($"{output}/archive.tar");
     }
