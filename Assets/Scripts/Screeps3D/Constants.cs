@@ -173,6 +173,15 @@ namespace Screeps3D
             public const string Zynthium = "Z";
             public const string Catalyst = "X";
         }
+
+        public static class BaseDeposit
+        {
+            public const string Silicon = "silicon";
+            public const string Metal = "metal";
+            public const string Biomass = "biomass";
+            public const string Mist = "mist";
+        }
+
         // TODO: factory update? https://github.com/screeps/storage/blob/b045531aca745f0942293bd32e0bdb5813bc12e2/lib/db.js#L55
         // https://github.com/screeps/common/blob/c5b52a2550444e6e30599c51eff3a601c983267e/lib/constants.js#L384-L387
         // might need to verify that all resources are in fact present.
@@ -280,5 +289,9 @@ namespace Screeps3D
         public static int NUKE_ROOM_RANGE = 10;
         public static int NUKE_TRAVEL_TICKS = 50000;
         public static int CONTROLLER_RESERVE_MAX = 5000;
+
+        public static float DEPOSIT_EXHAUST_MULTIPLY = 0.001f;
+        public static float DEPOSIT_EXHAUST_POW = 1.2f;
+        public static int DEPOSIT_DECAY_TIME = 50000;
     }
 }

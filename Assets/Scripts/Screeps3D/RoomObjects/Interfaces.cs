@@ -49,6 +49,11 @@ namespace Screeps3D.RoomObjects
         string ResourceType { get; set; }
     }
 
+    internal interface IDepositObject
+    {
+        string DepositType { get; set; }
+    }
+
     internal interface IRegenerationObject : IRoomObject
     {
         float NextRegenerationTime { get; set; }
@@ -83,6 +88,12 @@ namespace Screeps3D.RoomObjects
     }
     internal interface IEffectObject {
         List<EffectDto> Effects { get; set; }
+    }
+
+    internal interface IDepositCooldown : IRoomObject
+    {
+        int Harvested { get; set; }
+        float CooldownTime { get; set; }
     }
 
     internal interface IHitpointsObject

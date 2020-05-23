@@ -66,7 +66,6 @@ namespace Screeps3D.RoomObjects.Views
 
                 _mineral.material.color = mineralcolor;
             }
-            //_body.material.mainTexture = _mineral.Owner.Badge;
 
             _rotTarget = transform.rotation;
             _posTarget = roomObject.Position;
