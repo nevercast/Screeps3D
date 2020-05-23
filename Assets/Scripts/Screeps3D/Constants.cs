@@ -173,11 +173,7 @@ namespace Screeps3D
             public const string Zynthium = "Z";
             public const string Catalyst = "X";
         }
-        ////RESOURCE_SILICON: 'silicon',
-        ////RESOURCE_METAL: 'metal',
-        ////RESOURCE_BIOMASS: 'biomass',
-        ////RESOURCE_MIST: 'mist',
-        ///
+
         public static class BaseDeposit
         {
             public const string Silicon = "silicon";
@@ -293,5 +289,9 @@ namespace Screeps3D
         public static int NUKE_ROOM_RANGE = 10;
         public static int NUKE_TRAVEL_TICKS = 50000;
         public static int CONTROLLER_RESERVE_MAX = 5000;
+
+        public static float DEPOSIT_EXHAUST_MULTIPLY = 0.001f;
+        public static float DEPOSIT_EXHAUST_POW = 1.2f;
+        public static int DEPOSIT_DECAY_TIME = 50000;
     }
 }

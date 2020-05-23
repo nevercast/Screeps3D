@@ -18,19 +18,22 @@ namespace Screeps3D.RoomObjects
 	        "cooldownTime": 1,
 	        845446E+07
         }
+        
+        hmmm is there a "lastCooldown" property? can it be calculated based on harvested and the cooldown time?
 
         Cooldown	0.001 * totalHarvested ^ 1.2	
         Decay	50,000 ticks after appearing or last harvest operation
 
         We could show the number of times harvested by calculating backwards from harvested and comparing with cooldownTime?
      */
-    public class Deposit : Structure, ICooldownObject /*not sure if cooldownTime is the same as cooldown*/, IDecay /*TODO: harvested panel*/
+    public class Deposit : Structure, IDepositCooldown, IDecay
     {
         public string DepositType { get; set; }
 
         public float NextDecayTime { get; set; }
 
-        public float Cooldown { get; set; }
+        public int Harvested { get; set; }
+        public float CooldownTime { get; set; }
 
         internal override void Unpack(JSONObject data, bool initial)
         {
@@ -47,17 +50,20 @@ namespace Screeps3D.RoomObjects
                 Initialized = true;
             }
 
-            UnpackUtility.Cooldown(this, data);
             // TODO: Decay is a max of 50k ticks, we can render a progressbar based on this info. and if no "max decay" is specified. it can do what it normally does.
             UnpackUtility.Decay(this, data);
-            // CooldownTime seems to behave more like Decay.
-            ////var coolDownTimeData = data["cooldownTime"];
-            ////if (coolDownTimeData != null)
-            ////{
-            ////    obj.Cooldown = coolDownTimeData.n;
-            ////    return;
-            ////}
 
+            var coolDownTimeData = data["cooldownTime"];
+            if (coolDownTimeData != null)
+            {
+                this.CooldownTime = coolDownTimeData.n;
+            }
+
+            var harvestedData = data["harvested"];
+            if (harvestedData != null)
+            {
+                this.Harvested = (int)harvestedData.n;
+            }
         }
 
         protected internal override void AssignView()

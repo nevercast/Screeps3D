@@ -79,6 +79,12 @@ namespace Screeps3D.RoomObjects
         float Cooldown { get; set; }
     }
 
+    internal interface IDepositCooldown : IRoomObject
+    {
+        int Harvested { get; set; }
+        float CooldownTime { get; set; }
+    }
+
     internal interface IHitpointsObject
     {
         float Hits { get; set; }
