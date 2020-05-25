@@ -7,11 +7,11 @@ namespace Screeps3D.RoomObjects.Views
     {
         public const string Path = "Prefabs/RoomObjects/controller";
 
-        [SerializeField] private Renderer _rend;
-        [SerializeField] private Renderer _playerRend;
-        [SerializeField] private ScaleVisibility _vis;
-        [SerializeField] private Collider _collider;
-        [SerializeField] private ParticleSystem _ps;
+        [SerializeField] private Renderer _rend = default;
+        [SerializeField] private Renderer _playerRend = default;
+        [SerializeField] private ScaleVisibility _vis = default;
+        [SerializeField] private Collider _collider = default;
+        [SerializeField] private ParticleSystem _ps = default;
 
         private Texture2D _texture;
         private Color _controllerWhite;
@@ -64,7 +64,8 @@ namespace Screeps3D.RoomObjects.Views
         {
             _texture = new Texture2D(8, 1);
             _texture.filterMode = FilterMode.Point;
-            _rend.materials[1].mainTexture = _texture;
+            //_rend.materials[1].mainTexture = _texture;
+            _rend.materials[1].SetTexture("_BaseColorMap", _texture); // main texture
             _rend.materials[1].SetTexture("_EmissionMap", _texture);
             ColorUtility.TryParseHtmlString("#FDF5E6", out _controllerWhite);
 
@@ -98,16 +99,19 @@ namespace Screeps3D.RoomObjects.Views
             }
             _texture.Apply();
 
+
+            Texture2D texture = null;
+            var color = Color.grey;
             if (_controller.Owner != null)
             {
-                _playerRend.materials[0].mainTexture = _controller.Owner.Badge;
-                _playerRend.materials[0].color = Color.white;
+                texture = _controller.Owner.Badge;
+                color = Color.white;
             }
-            else
-            {
-                _playerRend.materials[0].mainTexture = null;
-                _playerRend.materials[0].color = Color.grey;
-            }
+
+            // TODO: what about using the badge if it is reserved? :thinking:
+
+            _playerRend.materials[0].SetTexture("_BaseColorMap", texture); // main texture
+            _playerRend.materials[0].SetColor("_BaseColor", color);
         }
 
         private void Update()

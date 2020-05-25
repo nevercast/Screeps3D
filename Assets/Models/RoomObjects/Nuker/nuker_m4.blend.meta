@@ -4,6 +4,9 @@ ModelImporter:
   serializedVersion: 19300
   internalIDToNameTable:
   - first:
+      0: 0
+    second: 
+  - first:
       74: -623603649343465320
     second: Scene
   externalObjects: {}

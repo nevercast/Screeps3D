@@ -3,6 +3,7 @@ using Screeps3D.Rooms;
 using Screeps_API;
 using UnityEngine;
 using System;
+using Assets.Scripts.Screeps3D.RoomObjects;
 
 namespace Screeps3D.RoomObjects
 {
@@ -77,6 +78,16 @@ namespace Screeps3D.RoomObjects
     internal interface ICooldownObject
     {
         float Cooldown { get; set; }
+    }
+
+    internal interface IEffect {
+        string effect {get; set;}
+        string power {get; set;}
+        long endTime {get; set;}
+        long duration {get; set;}
+    }
+    internal interface IEffectObject {
+        List<EffectDto> Effects { get; set; }
     }
 
     internal interface IDepositCooldown : IRoomObject

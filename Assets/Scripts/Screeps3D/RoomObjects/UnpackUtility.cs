@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using Assets.Scripts.Screeps3D.RoomObjects;
 using Screeps_API;
 using UnityEngine;
 
@@ -119,6 +121,43 @@ namespace Screeps3D.RoomObjects
             if (decayData != null)
             {
                 obj.NextDecayTime = decayData.n;
+            }
+        }
+
+        internal static void Effects(IEffectObject obj, JSONObject data)
+        {
+            // Invader Core effects example:
+            // "effects":[
+            //     {"effect":1001,"power":1001,"endTime":2,641389E+07,"duration":5000},
+            //     {"effect":1002,"power":1002,"endTime":2,649596E+07,"duration":82074}
+            // ],
+
+            var effectsData = data["effects"];
+
+            if (effectsData != null)
+            {
+                obj.Effects.Clear();
+                foreach (var effect in effectsData.list)
+                {
+                    var effectType = (int)effect["effect"].n;
+                    var powerType = (int)effect["power"].n;
+                    var endTime = (int)effect["endTime"].n;
+                    var duration = (int)effect["duration"].n;
+
+                    obj.Effects.Add(new EffectDto(effectType, powerType, endTime, duration));
+                }
+
+                ////var sb = new StringBuilder();
+                ////sb.AppendLine($"{obj.Effects.Count} effects parsed");
+                ////foreach (var effect in obj.Effects)
+                ////{
+                ////    sb.AppendLine($"    Effect: {effect.Effect}");
+                ////    sb.AppendLine($"    Power: {effect.Power}");
+                ////    sb.AppendLine($"    EndTime: {effect.EndTime}");
+                ////    sb.AppendLine($"    Duration: {effect.Duration}");
+                ////}
+
+                ////Debug.Log(sb.ToString());
             }
         }
 

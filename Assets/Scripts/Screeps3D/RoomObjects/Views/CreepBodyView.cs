@@ -4,7 +4,7 @@ namespace Screeps3D.RoomObjects.Views
 {
     public class CreepBodyView : MonoBehaviour, IObjectViewComponent
     {
-        [SerializeField] private Renderer _rend;
+        [SerializeField] private Renderer _rend = default;
         private Creep _creep;
         private Texture2D _texture;
 
@@ -26,7 +26,10 @@ namespace Screeps3D.RoomObjects.Views
         {
             _texture = new Texture2D(50, 1);
             _texture.filterMode = FilterMode.Point;
-            _rend.material.mainTexture = _texture;
+            //_rend.material.mainTexture = _texture;
+            //_rend.material.SetTexture("_MainTex", _texture);
+            _rend.material.SetTexture("_BaseColorMap", _texture);
+            
         }
 
         public void Delta(JSONObject data)

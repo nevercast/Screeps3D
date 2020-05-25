@@ -8,12 +8,15 @@ namespace Screeps3D.World.Views
     public class NukeMissileView : MonoBehaviour, IWorldOverlayViewComponent
     {
         public NukeMissileOverlay Overlay { get; private set; }
+        [SerializeField] private Renderer _nuke;        
 
         private NukeMissileArchRenderer arcRenderer;
 
         private bool initialized = false;
 
         private bool nukeExploded = false;
+
+        private bool badgeSet = false;
 
         public void Init(WorldOverlay overlay)
         {
@@ -41,9 +44,11 @@ namespace Screeps3D.World.Views
             //arcRenderer.Progress(Overlay.Progress); // TODO: render progress on selection panel when you select the missile.
 
             initialized = true;
-
             // spawn nuke explosion for testing purposes, not sure it belongs on the missile view? :shrugh: belongs in an "onTick" event or something
             //EffectsUtility.NukeExplosition(Overlay.ImpactPosition);
+
+            
+            
         }
 
         private void Update()
@@ -57,6 +62,20 @@ namespace Screeps3D.World.Views
             {
                 return;
             }
+
+            if (!badgeSet)
+            {
+                var launchRoomInfo = MapStatsUpdater.Instance.GetRoomInfo(Overlay.Shard, Overlay.LaunchRoomName);
+                if (launchRoomInfo != null)
+                {
+                    _nuke.materials[3].SetColor("EmissionColor", new Color(0.7f, 0.7f, 0.7f, 1f));
+                    _nuke.materials[3].SetTexture("EmissionTexture", launchRoomInfo.User?.Badge);
+                    _nuke.materials[3].SetFloat("EmissionStrength", 4);
+                    badgeSet = true;
+                }
+            }
+            float decayEmission = 2f + Mathf.Abs(Mathf.Sin(Time.time)) * 3;
+            _nuke.materials[3].SetFloat("EmissionStrength", decayEmission);
 
             // TODO: should we simulate movement / progress in between nukemonitor updates so the misile moves "smoothly"? this neeeds to be in update then. and not sure calling arcRenderer.Progress works, we then need a "targetProgress" or something like that, could let us inspire by creep movement between ticks
             // TODO: should perhaps move this calculation so progress is updated on each tick? and not each rendering?
