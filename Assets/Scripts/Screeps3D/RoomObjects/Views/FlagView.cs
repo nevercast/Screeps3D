@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Screeps3D;
+using UnityEngine;
 
 namespace Screeps3D.RoomObjects.Views
 {
@@ -32,8 +33,15 @@ namespace Screeps3D.RoomObjects.Views
 
             var primary = Constants.FlagColors[_flag.PrimaryColor];
             var secondary = Constants.FlagColors[_flag.SecondaryColor];
-            rend.materials[0].color = Color.Lerp(rend.materials[0].color, primary, Time.deltaTime);
-            rend.materials[1].color = Color.Lerp(rend.materials[1].color, secondary, Time.deltaTime);
+
+            var currentPrimaryColor = rend.materials[0].GetColor(ShaderKeys.HDRPLit.Color);
+            var currentSecondaryColor = rend.materials[1].GetColor(ShaderKeys.HDRPLit.Color);
+
+            // TODO: compare if we need to update the color
+            // https://docs.unity3d.com/ScriptReference/Mathf.Approximately.html
+
+            rend.materials[0].SetColor(ShaderKeys.HDRPLit.Color, Color.Lerp(currentPrimaryColor, primary, Time.deltaTime));
+            rend.materials[1].SetColor(ShaderKeys.HDRPLit.Color, Color.Lerp(currentSecondaryColor, secondary, Time.deltaTime));
         }
     }
 }
