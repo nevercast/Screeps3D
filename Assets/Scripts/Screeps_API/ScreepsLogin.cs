@@ -44,7 +44,7 @@ namespace Screeps_API
             GameManager.OnModeChange += OnModeChange;
             serverListProviders.Add(new OfficialServerListProvider());
             serverListProviders.Add(new OfficialCommunityServerListProvider());
-            // TODO: SS3 Unified Credentials File .yml
+            serverListProviders.Add(new SS3UCFServerListProvider());
             // TODO: SS3 Unified Credentials File .ini
             // https://screeps.online/ ?
 
@@ -116,7 +116,7 @@ namespace Screeps_API
             }
 
             var server = new ServerCache
-                {Type = SourceProviderType.Custom, Address = {HostName = input, Port = "21025"}};
+            { Type = SourceProviderType.Custom, Address = { HostName = input, Port = "21025" } };
 
             // split/parse http url and port and assign properly e.g. http://screeps.reggaemuffin.me:21025
             var urlPattern =
@@ -247,6 +247,7 @@ namespace Screeps_API
 
             _servers = SaveManager.Load<CacheList>(_savePath) ?? new CacheList();
 
+            Debug.Log($"Loaded {_servers.Count} servers from servers.dat");
 
             // Get status of servers, should probably be async for each server and a coroutine.
             // Need to double wrap it to keep a reference to the server
@@ -295,7 +296,8 @@ namespace Screeps_API
                         if (provider.MergeWithCache)
                         {
                             var cachedServer = _servers.SingleOrDefault(cache =>
-                                cache.Address.HostName == server.Address.HostName
+                                cache.Name == server.Name
+                                && cache.Address.HostName == server.Address.HostName
                                 && cache.Address.Path == server.Address.Path
                                 && cache.Address.Port == server.Address.Port);
 
@@ -305,12 +307,28 @@ namespace Screeps_API
                             }
                             else
                             {
-                                
+                                cachedServer.Persist = server.Persist;
                                 cachedServer.Name = server.Name;
                                 cachedServer.LikeCount = server.LikeCount;
 
                                 //Backwards compatibility
                                 cachedServer.Type = server.Type;
+
+                                // Update credentials
+                                if (!string.IsNullOrEmpty(server.Credentials.Token))
+                                {
+                                    cachedServer.Credentials.Token = server.Credentials.Token;
+                                }
+
+                                if (!string.IsNullOrEmpty(server.Credentials.Email))
+                                {
+                                    cachedServer.Credentials.Email = server.Credentials.Email;
+                                }
+
+                                if (!string.IsNullOrEmpty(server.Credentials.Password))
+                                {
+                                    cachedServer.Credentials.Password = server.Credentials.Password;
+                                }
                             }
                         }
                         else
@@ -372,8 +390,7 @@ namespace Screeps_API
             // TODO: look into SSL
 
             var filteredServers = new CacheList();
-            filteredServers.AddRange(_servers.Where(s => s.HasCredentials));
-
+            filteredServers.AddRange(_servers.Where(s => s.HasCredentials && s.Persist));
 
             SaveManager.Save(_savePath, filteredServers);
             NotifyText.Message("Connecting...");
