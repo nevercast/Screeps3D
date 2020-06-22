@@ -280,27 +280,31 @@ namespace Screeps3D.Rooms.Views
             }
             foreach (var pos in _lairPositions)
             {
-                for (int x = -1; x <= 1; ++x)
-                    for (int y = -1; y <= 1; ++y)
-                        wallHeight[pos.x + x, pos.y + y] = Math.Min(wallHeight[pos.x + x, pos.y + y], 0.35f + getRandom(pos.x + x, pos.y + y) * 0.05f);
+                for (int x = pos.x - 1; x <= pos.x + 1; ++x)
+                    for (int y = pos.y - 1; y <= pos.y + 1; ++y)
+                        if (x >= 0 && x <= 49 && y >= 0 && y <= 49)
+                            wallHeight[x, y] = Math.Min(wallHeight[x, y], 0.35f + getRandom(x, y) * 0.05f);
             }
             foreach (var pos in _mineralPositions)
             {
-                for (int x = -1; x <= 1; ++x)
-                    for (int y = -1; y <= 1; ++y)
-                        wallHeight[pos.x + x, pos.y + y] = Math.Min(wallHeight[pos.x + x, pos.y + y], 0.75f + getRandom(pos.x + x, pos.y + y) * 0.25f);
+                for (int x = pos.x - 1; x <= pos.x + 1; ++x)
+                    for (int y = pos.y - 1; y <= pos.y + 1; ++y)
+                        if (x >= 0 && x <= 49 && y >= 0 && y <= 49)
+                            wallHeight[x, y] = Math.Min(wallHeight[x, y], 0.75f + getRandom(x, y) * 0.25f);
             }
             foreach (var pos in _controllerPositions)
             {
-                for (int x = -1; x <= 1; ++x)
-                    for (int y = -1; y <= 1; ++y)
-                        wallHeight[pos.x + x, pos.y + y] = Math.Min(wallHeight[pos.x + x, pos.y + y], 1.0f + getRandom(pos.x + x, pos.y + y) * 0.5f);
+                for (int x = pos.x - 1; x <= pos.x + 1; ++x)
+                    for (int y = pos.y - 1; y <= pos.y + 1; ++y)
+                        if (x >= 0 && x <= 49 && y >= 0 && y <= 49)
+                            wallHeight[x, y] = Math.Min(wallHeight[x, y], 1.0f + getRandom(x, y) * 0.5f);
             }
             foreach (var pos in _powerBankPositions)
             {
-                for (int x = -1; x <= 1; ++x)
-                    for (int y = -1; y <= 1; ++y)
-                        wallHeight[pos.x + x, pos.y + y] = Math.Min(wallHeight[pos.x + x, pos.y + y], 0.75f + getRandom(pos.x + x, pos.y + y) * 0.25f);
+                for (int x = pos.x - 1; x <= pos.x + 1; ++x)
+                    for (int y = pos.y - 1; y <= pos.y + 1; ++y)
+                        if (x >= 0 && x <= 49 && y >= 0 && y <= 49)
+                            wallHeight[x, y] = Math.Min(wallHeight[x, y], 0.75f + getRandom(x, y) * 0.25f);
             }
 
 
