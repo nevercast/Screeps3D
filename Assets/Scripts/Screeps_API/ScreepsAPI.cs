@@ -18,6 +18,8 @@ namespace Screeps_API
         public static UserManager UserManager { get; private set; }
         public static CpuMonitor Monitor { get; private set; }
         public static ScreepsConsole Console { get; private set; }
+
+        public static ServerMessageMonitor ServerMessageMonitor { get; private set; }
         public static long Time { get; internal set; }
         public static bool IsConnected { get; private set; }
         
@@ -37,6 +39,7 @@ namespace Screeps_API
             Monitor = GetComponent<CpuMonitor>();
             Console = GetComponent<ScreepsConsole>();
             UserManager = new UserManager();
+            ServerMessageMonitor = GetComponent<ServerMessageMonitor>();
         }
 
         // Use this for initialization
