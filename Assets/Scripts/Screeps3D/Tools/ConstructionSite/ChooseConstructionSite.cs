@@ -72,6 +72,7 @@ namespace Assets.Scripts.Screeps3D.Tools.ConstructionSite
 
             UpdateAvailable();
 
+            SetContentHeight();
         }
 
         private void OnRoomChange()
@@ -145,11 +146,17 @@ namespace Assets.Scripts.Screeps3D.Tools.ConstructionSite
 
                 site.Value.ConstructionSiteItem = newSite;
             }
-            
-            // Set height of content
+
+            SetContentHeight();
+        }
+
+        private void SetContentHeight()
+        {
             var constructionSitesRect = constructionSites.GetComponent<RectTransform>();
             var contentRect = constructionSites.transform.parent.GetComponent<RectTransform>();
             contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, constructionSitesRect.sizeDelta.y);
+
+            constructionSitesRect.anchoredPosition = new Vector3(constructionSitesRect.anchoredPosition.x, constructionSitesRect.sizeDelta.y / 2f);
         }
 
         private void ToggleInput(Toggle toggle, bool isOn, string type)
