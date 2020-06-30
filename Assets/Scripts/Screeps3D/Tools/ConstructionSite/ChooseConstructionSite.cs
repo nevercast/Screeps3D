@@ -4,6 +4,7 @@ using Screeps3D.Player;
 using Screeps3D.RoomObjects;
 using Screeps3D.Rooms;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -72,7 +73,7 @@ namespace Assets.Scripts.Screeps3D.Tools.ConstructionSite
 
             UpdateAvailable();
 
-            SetContentHeight();
+            StartCoroutine(SetDeferredContentHeight());
         }
 
         private void OnRoomChange()
@@ -146,7 +147,11 @@ namespace Assets.Scripts.Screeps3D.Tools.ConstructionSite
 
                 site.Value.ConstructionSiteItem = newSite;
             }
+        }
 
+        private IEnumerator SetDeferredContentHeight()
+        {
+            yield return new WaitForSeconds(0.1f); // gotta yield to let content size fitter run
             SetContentHeight();
         }
 
