@@ -1,4 +1,4 @@
-using Common;
+﻿using Common;
 using UnityEngine;
 using System.Linq;
 using Screeps_API;
@@ -138,22 +138,56 @@ namespace Screeps3D.RoomObjects.Views
             }
         }
 
-
+        
         public void Delta(JSONObject data)
-        { 
+        {
             // Delta data{"store":{"energy":2644,"battery":4449},"actionLog":{"produce":{"x":21,"y":19,"resourceType":"energy"}},"cooldownTime":1,940481E+07}
             AdjustScale();
             _isOnCooldown = _factory.CooldownTime > ScreepsAPI.Time;
             _lightningRing.enabled = false;
 
-            if(!data.HasField("actionLog") || !data["actionLog"].HasField("produce") || data["actionLog"]["produce"]["resourceType"] == null) {
+            if (!data.HasField("actionLog") || !data["actionLog"].HasField("produce") || data["actionLog"]["produce"]["resourceType"] == null)
+            {
                 showProduction("none");
                 return;
             };
-            var product = data["actionLog"]["produce"]["resourceType"].str;  
+            var product = data["actionLog"]["produce"]["resourceType"].str;
+
+            ////string product = DebugProduceRendering();
+
             _lightningRing.enabled = true;
             showProduction(product);
-            return;           
+            return;
+        }
+
+        private int produceIndex = 0;
+        private string DebugProduceRendering()
+        {
+            var renderQueue = new System.Collections.Generic.List<string> {
+                "battery",
+                "energy",
+                "O",
+                "oxidant",
+                "purifier",
+                "condensate",
+                "wire",
+                "cell",
+                "alloy"
+            };
+
+            showProduction("none");
+
+            if (renderQueue.Count == produceIndex)
+            {
+                produceIndex = 0;
+            }
+
+            var product = renderQueue[produceIndex];
+            produceIndex++;
+            NotifyText.Message($"<size=40><b>{product}</b></size>", resourceToColor(product));
+
+            return product;
+
         }
 
         public void Unload(RoomObject roomObject)
