@@ -141,8 +141,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c281b437df4abc647a932832f3097098, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mineralMesh: {fileID: 0}
-  _collider: {fileID: 0}
+  _mineralMesh: {fileID: 23407070794174552}
+  _collider: {fileID: 4470708617799309100}
   _vis: {fileID: 114612420582581000}
 --- !u!114 &3020949016984270398
 MonoBehaviour:
