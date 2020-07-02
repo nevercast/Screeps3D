@@ -73,25 +73,25 @@ namespace Screeps3D.RoomObjects.Views
 
         private Color resourceToColor(string resource) {
             switch(resource) {
-                case "U":
+                case Constants.BaseMineral.Utrium:
                 case "utrium_bar":
                     return new Color32(80,215,249,255);
-                case "L":
+                case Constants.BaseMineral.Lemergium:
                 case "lemergium_bar":
                     return new Color32(0,244,162,255);
-                case "Z":
+                case Constants.BaseMineral.Zynthium:
                 case "zynthium_bar":
                     return new Color32(253,211,136,255);
-                case "K":
+                case Constants.BaseMineral.Keanium:
                 case "keanium_bar":
                     return new Color32(160,113,255,255);
-                case "O":
+                case Constants.BaseMineral.Oxygen:
                 case "oxidant":
                     return new Color32(160, 185, 175, 255);
-                case "H":
+                case Constants.BaseMineral.Hydrogen:
                 case "reductant":
                     return new Color32(160, 180, 185,255);
-                case "X":
+                case Constants.BaseMineral.Catalyst:
                 case "purifier":
                     return new Color32(255,119,119,255);
                 case "G":
