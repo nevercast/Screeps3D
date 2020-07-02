@@ -1,4 +1,4 @@
-﻿using Common;
+using Common;
 using UnityEngine;
 using System.Linq;
 using Screeps_API;
@@ -192,7 +192,7 @@ namespace Screeps3D.RoomObjects.Views
                 return;
             }
             
-            _commodityProduct.enabled = false;
+            _commodityProduct.enabled = true;
             _commodityProduct.materials[1].SetColor("EmissionColor", c);
         }
 
