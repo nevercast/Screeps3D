@@ -161,6 +161,20 @@ namespace Screeps3D.Rooms
             }
         }
 
+        internal void GetAndChooseRandomWorldStartRoom()
+        {
+            var random = new System.Random();
+            var room = ScreepsAPI.WorldStartRooms.ElementAt(random.Next(ScreepsAPI.WorldStartRooms.Count()));
+            var shardAndRoom = room.Split('/');
+            if (shardAndRoom.Length == 2)
+            {
+                room = shardAndRoom[1];
+            }
+
+            Debug.Log($"Going to random world start room {room}");
+            GetAndChooseRoom(room);
+        }
+
         // shamelessly "stolen" / given by ags131
         private void RoomSwap()
         {

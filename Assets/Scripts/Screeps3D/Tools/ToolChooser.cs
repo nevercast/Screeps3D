@@ -73,6 +73,7 @@ namespace Screeps3D.Tools
             switch (tool)
             {
                 case ToolType.Selection:
+                    toggle = _selectionToggle;
                     break;
                 case ToolType.Flag:
                     toggle = _flagToggle;
