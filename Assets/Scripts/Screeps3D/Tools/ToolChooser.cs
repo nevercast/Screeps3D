@@ -34,6 +34,13 @@ namespace Screeps3D.Tools
             _vis.SetVisibility(mode == GameMode.Room);
         }
 
+        public void SelectTool(ToolType toolType)
+        {
+            Toggle toggle = GetToggleButton(toolType);
+            toggle.isOn = true;
+
+        }
+
         private void ToggleInput(bool isOn, ToolType toolType)
         {
             if (!isOn)
@@ -45,15 +52,22 @@ namespace Screeps3D.Tools
 
         internal void Show(ToolType tool)
         {
-            Toggle(tool, true);
+            SetToggleActive(tool, true);
         }
 
         internal void Hide(ToolType tool)
         {
-            Toggle(tool, false);
+            SetToggleActive(tool, false);
         }
 
-        private void Toggle(ToolType tool, bool show)
+        private void SetToggleActive(ToolType tool, bool show)
+        {
+            Toggle toggle = GetToggleButton(tool);
+
+            toggle?.gameObject.SetActive(show);
+        }
+
+        private Toggle GetToggleButton(ToolType tool)
         {
             Toggle toggle = null;
             switch (tool)
@@ -71,7 +85,7 @@ namespace Screeps3D.Tools
                     break;
             }
 
-            toggle?.gameObject.SetActive(show);
+            return toggle;
         }
     }
 

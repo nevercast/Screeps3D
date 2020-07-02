@@ -120,6 +120,8 @@ namespace Screeps3D
                         _toolChooser?.Show(ToolType.Flag);
                         _toolChooser?.Show(ToolType.Construction);
                         _toolChooser?.Hide(ToolType.Spawn);
+
+                        _toolChooser?.SelectTool(ToolType.Selection);
                     }
                     break;
                 case WorldStatus.Lost:
@@ -133,6 +135,8 @@ namespace Screeps3D
                     _toolChooser?.Hide(ToolType.Flag);
                     _toolChooser?.Hide(ToolType.Construction);
                     _toolChooser?.Show(ToolType.Spawn);
+
+                    _toolChooser?.SelectTool(ToolType.Spawn);
 
                     // Get respawn prohibited rooms and cache them
 
