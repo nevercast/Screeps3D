@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.Common;
 using Assets.Scripts.Screeps_API.ConsoleClientAbuse;
+using Assets.Scripts.Screeps3D;
 using Assets.Scripts.Screeps3D.Rooms.Views;
 using Common;
 using Screeps_API;
@@ -10,6 +11,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -68,6 +70,26 @@ namespace Screeps3D.Rooms
             }
 
             _roomList.Hide();
+        }
+
+        private void Instance_OnGoToRoom(object sender, GoToRoomEventArgs e)
+        {
+            StartCoroutine(TwitchGotoRoom(e));
+        }
+
+        private IEnumerator TwitchGotoRoom(GoToRoomEventArgs e)
+        {
+            Debug.Log($"Twitch told me to go to {e.RoomName}");
+            this.GetAndChooseRoom(e.RoomName);
+
+            if (_pvpSpectateToggle.isOn)
+            {
+                // TODO: what if people constantly swap rooms?
+                Debug.Log($"Pausing pvp spectate for {e.Seconds}s");
+                _pvpSpectateToggle.isOn = false;
+                yield return new WaitForSeconds(e.Seconds);
+                _pvpSpectateToggle.isOn = true;
+            }
         }
 
         private void OnTogglePvpSpectate(bool isOn)
@@ -197,6 +219,11 @@ namespace Screeps3D.Rooms
         private float _pvpSpectateBias = 0;
         private void ChooseRoomWithPVPOrOwnedRoom()
         {
+            // loop rooms and add a list of rooms, mark the selected one bold
+            // https://twitchtv.desk.com/customer/en/portal/articles/2884064-twitch-app-s-chat-message-formatting
+            // the pvp list probably belongs in a twitch extension https://www.twitch.tv/p/extensions/
+            // Still a little spammy with every 30 seconds, should probably collect pvp details in a warpath fashion and put the message on a "warpath" timer
+
             if (ScreepsAPI.Cache.Official)
             {
                 //// requires screepsmod-admin-utils
@@ -536,6 +563,9 @@ namespace Screeps3D.Rooms
             {
                 this.OnTogglePvpSpectate(_pvpSpectateToggle.isOn);
             }
+
+            // We register it here, cause we are lazy, and hopefully the twitch client is initialized.
+            TwitchClient.Instance.OnGoToRoom += Instance_OnGoToRoom;
         }
 
         private void AddRoomToRoomListGameObject(string shardName, string romName)
