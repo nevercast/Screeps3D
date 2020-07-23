@@ -18,7 +18,7 @@ namespace Screeps3D.World.Views
 
         private bool badgeSet = false;
 
-        public void Init(WorldOverlay overlay)
+        public void Init(object overlay)
         {
             Overlay = overlay as NukeMissileOverlay;
 
