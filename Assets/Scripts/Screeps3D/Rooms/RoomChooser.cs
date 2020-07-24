@@ -48,6 +48,8 @@ namespace Screeps3D.Rooms
         private IEnumerator _findPvpRooms;
         private IEnumerator _findPlayerOwnedRooms;
 
+        private bool pausedBecauseOfTwitchGoto = false;
+
         private void Start()
         {
             random = new System.Random();
@@ -86,9 +88,11 @@ namespace Screeps3D.Rooms
             {
                 // TODO: what if people constantly swap rooms?
                 Debug.Log($"Pausing pvp spectate for {e.Seconds}s");
+                pausedBecauseOfTwitchGoto = true;
                 _pvpSpectateToggle.isOn = false;
                 yield return new WaitForSeconds(e.Seconds);
                 _pvpSpectateToggle.isOn = true;
+                pausedBecauseOfTwitchGoto = false;
             }
         }
 
@@ -104,7 +108,7 @@ namespace Screeps3D.Rooms
             }
             else
             {
-                PlaceSpawnView.EnableOverlay = true;
+                PlaceSpawnView.EnableOverlay = pausedBecauseOfTwitchGoto ? false : true;
                 if (_findPvpRooms != null)
                 {
                     StopCoroutine(_findPvpRooms);
