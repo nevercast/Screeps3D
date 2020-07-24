@@ -284,6 +284,12 @@ namespace Screeps3D.Rooms
                 {
                     var index = Mathf.FloorToInt(random.Next(rooms.Count()) * Math.Min(_pvpSpectateBias, rooms.Count()));
                     Debug.Log($"warpath room index {index}");
+
+                    if (index >= rooms.Count())
+                    {
+                        index -= 1;
+                    }
+
                     var room = rooms.ElementAt(index);
                     if (PlayerPosition.Instance.RoomName == room.RoomName)
                     {
@@ -297,7 +303,48 @@ namespace Screeps3D.Rooms
                     var roomName = room.RoomName;
                     _roomInput.text = roomName;
                     Debug.Log($"Going to room {roomName} bias: {_pvpSpectateBias} Classification {room.Classification}, Defender: {room.Defender?.Username} , Attackers: {string.Join(",", room.Attackers.Select(a => a.Username))}");
-                    this.GetAndChooseRoom(roomName);
+                    var swappingRooms = false;
+                    if (PlayerPosition.Instance.RoomName != roomName)
+                    {
+                        // Only swap room if it is a new one
+                        swappingRooms = true;
+                        this.GetAndChooseRoom(roomName);
+                    }
+
+                    var sb = new StringBuilder();
+                    //var fontSize
+                    var messageColor = Color.white;
+                    switch (room.Classification)
+                    {
+                        case Warpath.Classification.Class2:
+                        case Warpath.Classification.Class3:
+                            messageColor = Color.yellow;
+                            break;
+                        case Warpath.Classification.Class4:
+                        case Warpath.Classification.Class5:
+                        case Warpath.Classification.Class6:
+                            messageColor = Color.red;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    sb.Append("<size=20>");
+                    if (swappingRooms)
+                    {
+                        sb.AppendLine($"Going to {room.RoomName}");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"Staying in {room.RoomName}");
+                    }
+
+                    sb.AppendLine($"Class {(int)room.Classification}");
+                    sb.AppendLine($"Defender {room.Defender?.Username}");
+                    sb.AppendLine($"Attackers {string.Join(",", room.Attackers.Select(a => a.Username))}");
+                    sb.Append("</size>");
+
+                    NotifyText.Message(sb.ToString(), messageColor, 2.5f);
                 }
                 else
                 {
