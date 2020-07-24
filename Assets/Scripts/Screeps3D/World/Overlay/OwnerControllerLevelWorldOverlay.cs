@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using Assets.Scripts.Screeps3D;
+using Assets.Scripts.Screeps3D.World.Views;
+using Common;
+using Screeps3D.Player;
 using Screeps3D.Rooms;
 using UnityEngine;
 
@@ -10,6 +14,8 @@ namespace Screeps3D.World.Views
 
     public class OwnerControllerLevelWorldOverlay : MonoBehaviour
     {
+        private Dictionary<string, WorldView> _views = new Dictionary<string, WorldView>();
+
         // TODO: we will initialize a list of OwnerControllerLevelViewData
         public OwnerControllerLevelWorldOverlay()
         {
@@ -25,5 +31,48 @@ namespace Screeps3D.World.Views
             //_badge.sprite = Sprite.Create(_selected.Owner.Badge,
             //    new Rect(0.0f, 0.0f, BadgeManager.BADGE_SIZE, BadgeManager.BADGE_SIZE), new Vector2(.5f, .5f));
         }
+
+        private void Awake()
+        {
+            MapStatsUpdater.Instance.OnMapStatsUpdated += Instance_OnMapStatsUpdated;
+        }
+
+        private void Instance_OnMapStatsUpdated()
+        {
+
+            if (MapStatsUpdater.Instance.RoomInfo.TryGetValue(PlayerPosition.Instance.ShardName, out var shardRoomInfo))
+            {
+                foreach (var roomInfo in shardRoomInfo)
+                {
+                    if (!_views.TryGetValue(roomInfo.RoomName, out var view))
+                    {
+                        Scheduler.Instance.Add(() =>
+                        {
+                            var room = RoomManager.Instance.Get(roomInfo.RoomName, PlayerPosition.Instance.ShardName);
+                            var data = new OwnerControllerLevelData(room, roomInfo);
+                            var o = WorldViewFactory.GetInstance(data);
+                            _views[roomInfo.RoomName] = o;
+                        });
+                    }
+
+                    // TODO: trigger an update?
+                }
+            }
+
+        }
+
+    }
+
+    public class OwnerControllerLevelData : WorldViewData
+    {
+        public OwnerControllerLevelData(Room room, RoomInfo roomInfo)
+        {
+            Type = "RoomOwnerInfo";
+            Room = room;
+            RoomInfo = roomInfo;
+        }
+
+        public Room Room { get; }
+        public RoomInfo RoomInfo { get; }
     }
 }
