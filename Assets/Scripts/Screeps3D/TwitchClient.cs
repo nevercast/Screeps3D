@@ -94,19 +94,21 @@ namespace Assets.Scripts.Screeps3D
         private void OnDestroy()
         {
             Debug.Log("TwitchClient destroyed?");
-            client.OnConnected -= Client_OnConnected;
-            client.OnJoinedChannel -= Client_OnJoinedChannel;
-            client.OnLeftChannel -= Client_OnLeftChannel;
-            client.OnDisconnected -= Client_OnDisconnected;
-            client.OnConnectionError -= Client_OnConnectionError;
-            client.OnUserTimedout -= Client_OnUserTimedout;
+            if (client != null)
+            {
+                client.OnConnected -= Client_OnConnected;
+                client.OnJoinedChannel -= Client_OnJoinedChannel;
+                client.OnLeftChannel -= Client_OnLeftChannel;
+                client.OnDisconnected -= Client_OnDisconnected;
+                client.OnConnectionError -= Client_OnConnectionError;
+                client.OnUserTimedout -= Client_OnUserTimedout;
 
 
-            client.OnChatCommandReceived -= Client_OnChatCommandReceived;
+                client.OnChatCommandReceived -= Client_OnChatCommandReceived;
 
-            client.OnMessageReceived -= Client_OnMessageReceived;
-            client.Disconnect();
-
+                client.OnMessageReceived -= Client_OnMessageReceived;
+                client.Disconnect(); 
+            }
         }
 
         public void SendTwitchMessage(string message)
