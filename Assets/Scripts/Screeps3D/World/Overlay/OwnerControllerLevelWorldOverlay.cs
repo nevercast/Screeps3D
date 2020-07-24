@@ -51,12 +51,39 @@ namespace Screeps3D.World.Views
                             var room = RoomManager.Instance.Get(roomInfo.RoomName, PlayerPosition.Instance.ShardName);
                             var data = new OwnerControllerLevelData(room, roomInfo);
                             var o = WorldViewFactory.GetInstance(data);
+                            o.name = $"{roomInfo.RoomName}:RoomOwnerInfoView";
                             _views[roomInfo.RoomName] = o;
                         });
                     }
 
                     // TODO: trigger an update?
                 }
+            }
+
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.KeypadPlus))
+            {
+                OwnerControllerLevelView.overlayCameraAngleThreshold += 0.1f;
+                Debug.Log($"overlayCameraAngleThreshold: {OwnerControllerLevelView.overlayCameraAngleThreshold}");
+            }
+            else if (Input.GetKeyDown(KeyCode.KeypadMinus))
+            {
+                OwnerControllerLevelView.overlayCameraAngleThreshold -= 0.1f;
+                Debug.Log($"overlayCameraAngleThreshold: {OwnerControllerLevelView.overlayCameraAngleThreshold}");
+            }
+
+            if (Input.GetKeyUp(KeyCode.Keypad9))
+            {
+                OwnerControllerLevelView.overlayCameraHeightThreshold -= 10f;
+                Debug.Log($"overlayCameraHeightThreshold: {OwnerControllerLevelView.overlayCameraHeightThreshold}");
+            }
+            else if (Input.GetKeyUp(KeyCode.Keypad6))
+            {
+                OwnerControllerLevelView.overlayCameraHeightThreshold += 10f;
+                Debug.Log($"overlayCameraHeightThreshold: {OwnerControllerLevelView.overlayCameraHeightThreshold}");
             }
 
         }

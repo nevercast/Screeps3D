@@ -29,10 +29,16 @@ namespace Common
             set { Instance._targetRotation = value; }
         }
 
-        public static Quaternion PivotRotation
+        public static Vector3 BoomLocalPosition
         {
-            get { return Instance._pivot.rotation; }
-            set { Instance._pivot.rotation = value; }
+            get { return Instance._boom.localPosition; }
+            set { Instance._boom.localPosition = value; }
+        }
+
+        public static Quaternion PivotLocalRotation
+        {
+            get { return Instance._pivot.localRotation; }
+            set { Instance._pivot.localRotation = value; }
         }
 
         public static Vector3 Position
