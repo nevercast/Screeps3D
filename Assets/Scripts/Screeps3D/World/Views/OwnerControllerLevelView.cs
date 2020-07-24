@@ -41,26 +41,28 @@ namespace Assets.Scripts.Screeps3D.World.Views
 
             switch (level)
             {
-                case 7: scale = 0.8f; break;
-                case 6: scale = 0.6f; break;
-                case 5: scale = 0.5f; break;
-                case 4: scale = 0.4f; break;
-                case 3: scale = 0.3f; break;
-                case 2: scale = 0.2f; break;
-                case 1: scale = 0.1f; break;
+                case 7: scale = 0.9f; break;
+                case 6: scale = 0.8f; break;
+                case 5: scale = 0.75f; break;
+                case 4: scale = 0.7f; break;
+                case 3: scale = 0.6f; break;
+                case 2: scale = 0.55f; break;
+                case 1: scale = 0.5f; break;
                 default:
                     break;
             }
 
             _badgeScaledContent.transform.localScale = new Vector3(scale, scale, 1f);
 
-            if (user != null)
+            // TODO: do zomething based on player height / zoom level
+
+            if (user != null && data.Room.Shown)
             {
                 _roomName.gameObject.SetActive(true);
                 _controllerLevel.gameObject.SetActive(true);
                 _badgeMask.gameObject.SetActive(true);
                 _badge.enabled = true;
-                // TODO: should we cache the sprite?
+                // TODO: should we cache the sprite? the badge will exist multiple places, 
                 _badge.sprite = Sprite.Create(user.Badge,
                         new Rect(0.0f, 0.0f, BadgeManager.BADGE_SIZE, BadgeManager.BADGE_SIZE), new Vector2(.5f, .5f));
 
