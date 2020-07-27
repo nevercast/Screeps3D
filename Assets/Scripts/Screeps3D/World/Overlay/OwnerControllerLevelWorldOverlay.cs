@@ -39,7 +39,7 @@ namespace Screeps3D.World.Views
 
         private void Instance_OnMapStatsUpdated()
         {
-
+            // TODO: scan X rooms in direction outward from player
             if (MapStatsUpdater.Instance.RoomInfo.TryGetValue(PlayerPosition.Instance.ShardName, out var shardRoomInfo))
             {
                 foreach (var roomInfo in shardRoomInfo)

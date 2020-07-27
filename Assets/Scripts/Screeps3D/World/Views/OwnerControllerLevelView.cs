@@ -40,8 +40,35 @@ namespace Assets.Scripts.Screeps3D.World.Views
             //arcRenderer.point1.transform.position = Overlay.LaunchRoom.Position + new Vector3(25, 0, 25); // Center of the room, because we do not know where the nuke is, could perhaps scan for it and correct it?
             this.gameObject.transform.position = data.Room.Position + new Vector3(25, overlayHeight, 25); // Center of the room
             _roomName.text = data.RoomInfo.RoomName;
-            _controllerLevel.text = data.RoomInfo.Level?.ToString() ?? string.Empty;
+            UpdateLevel();
             var user = data.RoomInfo.User;
+
+
+            // TODO: do zomething based on player height / zoom level
+
+            if (OverlayShouldBeShown(user))
+            {
+                _canvas.gameObject.SetActive(true);
+                UpdateUser(user);
+                ScaleBadge();
+            }
+            else
+            {
+                _canvas.gameObject.SetActive(false);
+            }
+
+        }
+
+        private void UpdateLevel()
+        {
+            if (_controllerLevel.text != data.RoomInfo.Level?.ToString())
+            {
+                _controllerLevel.text = data.RoomInfo.Level?.ToString() ?? string.Empty; 
+            }
+        }
+
+        private void ScaleBadge()
+        {
             float scale = 1f;
             int level = data.RoomInfo.Level ?? 1;
             if (data.RoomInfo.IsReserved)
@@ -63,24 +90,22 @@ namespace Assets.Scripts.Screeps3D.World.Views
                     break;
             }
 
-            _badgeScaledContent.transform.localScale = new Vector3(scale, scale, 1f);
-
-            // TODO: do zomething based on player height / zoom level
-
-            if (OverlayShouldBeShown(user))
+            if (_badgeScaledContent.transform.localScale.x != scale)
             {
-                _canvas.gameObject.SetActive(true);
+                _badgeScaledContent.transform.localScale = new Vector3(scale, scale, 1f); 
+            }
+        }
+
+        private void UpdateUser(ScreepsUser user)
+        {
+            if (_username.text != user.Username)
+            {
                 // TODO: should we cache the sprite? the badge will exist multiple places, 
                 _badge.sprite = Sprite.Create(user.Badge,
-                        new Rect(0.0f, 0.0f, BadgeManager.BADGE_SIZE, BadgeManager.BADGE_SIZE), new Vector2(.5f, .5f));
+                            new Rect(0.0f, 0.0f, BadgeManager.BADGE_SIZE, BadgeManager.BADGE_SIZE), new Vector2(.5f, .5f));
 
-                _username.text = user.Username;
+                _username.text = user.Username; 
             }
-            else
-            {
-                _canvas.gameObject.SetActive(false);
-            }
-
         }
 
         private bool OverlayShouldBeShown(ScreepsUser user)
@@ -97,6 +122,9 @@ namespace Assets.Scripts.Screeps3D.World.Views
 
             if (OverlayShouldBeShown(data.RoomInfo.User) && CameraHasCorrectHeight())
             {
+                UpdateUser(data.RoomInfo.User);
+                ScaleBadge();
+                UpdateLevel();
                 _canvas.gameObject.SetActive(true);
             }
             else
