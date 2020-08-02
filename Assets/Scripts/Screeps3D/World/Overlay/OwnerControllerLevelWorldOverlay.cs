@@ -5,6 +5,7 @@ using Assets.Scripts.Screeps3D.World.Views;
 using Common;
 using Screeps3D.Player;
 using Screeps3D.Rooms;
+using Screeps3D.Rooms.Views;
 using UnityEngine;
 
 namespace Screeps3D.World.Views
@@ -37,29 +38,10 @@ namespace Screeps3D.World.Views
             MapStatsUpdater.Instance.OnMapStatsUpdated += Instance_OnMapStatsUpdated;
         }
 
+        public const float OverlayDistance = 200;
         private void Instance_OnMapStatsUpdated()
         {
-            // TODO: scan X rooms in direction outward from player
-            if (MapStatsUpdater.Instance.RoomInfo.TryGetValue(PlayerPosition.Instance.ShardName, out var shardRoomInfo))
-            {
-                foreach (var roomInfo in shardRoomInfo)
-                {
-                    if (!_views.TryGetValue(roomInfo.RoomName, out var view))
-                    {
-                        Scheduler.Instance.Add(() =>
-                        {
-                            var room = RoomManager.Instance.Get(roomInfo.RoomName, PlayerPosition.Instance.ShardName);
-                            var data = new OwnerControllerLevelData(room, roomInfo);
-                            var o = WorldViewFactory.GetInstance(data);
-                            o.name = $"{roomInfo.RoomName}:RoomOwnerInfoView";
-                            _views[roomInfo.RoomName] = o;
-                        });
-                    }
-
-                    // TODO: trigger an update?
-                }
-            }
-
+            LoadViewsByPlayerPosition(); // TODO: add property to trigger "update" of data.
         }
 
         private enum LookingDirection
@@ -119,8 +101,44 @@ namespace Screeps3D.World.Views
                 _lookingDirection = LookingDirection.West;
             }
             //Debug.Log(_lookingDirection);
+
+            LoadViewsByPlayerPosition();
         }
 
+        private void LoadViewsByPlayerPosition()
+        {
+            var playerPosition = PlayerPosition.Instance.transform.position;
+            foreach (var col in Physics.OverlapSphere(playerPosition, OverlayDistance, 1 << 10))
+            {
+                var roomView = col.GetComponent<RoomView>();
+                if (!roomView || Vector3.Distance(playerPosition, roomView.Room.Position) > OverlayDistance)
+                {
+                    continue;
+                }
+
+                var roomInfo = MapStatsUpdater.Instance.GetRoomInfo(PlayerPosition.Instance.ShardName, roomView.Room.RoomName);
+
+                if (!_views.TryGetValue(roomInfo.RoomName, out var view))
+                {
+                    _views[roomInfo.RoomName] = null; // Add it with a null value to prevent repated queueing
+
+                    Scheduler.Instance.Add(() =>
+                    {
+                        var room = RoomManager.Instance.Get(roomInfo.RoomName, PlayerPosition.Instance.ShardName);
+                        var data = new OwnerControllerLevelData(room, roomInfo);
+                        var o = WorldViewFactory.GetInstance(data);
+                        o.name = $"{roomInfo.RoomName}:RoomOwnerInfoView";
+                        _views[roomInfo.RoomName] = o;
+                    });
+                }
+
+                if (view != null)
+                {
+                // TODO: trigger an update?
+
+                }
+            }
+        }
     }
 
     public class OwnerControllerLevelData : WorldViewData
