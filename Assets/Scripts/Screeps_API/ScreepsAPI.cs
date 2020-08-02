@@ -24,6 +24,8 @@ namespace Screeps_API
 
         public static Warpath Warpath { get; private set; }
 
+        public static ResourceMonitor Resources { get; private set; }
+
         public static long Time { get; internal set; }
         public static bool IsConnected { get; private set; }
         
@@ -47,6 +49,7 @@ namespace Screeps_API
             UserManager = new UserManager();
             ServerMessageMonitor = GetComponent<ServerMessageMonitor>();
             Warpath = GetComponent<Warpath>();
+            Resources = GetComponent<ResourceMonitor>();
         }
 
         // Use this for initialization
