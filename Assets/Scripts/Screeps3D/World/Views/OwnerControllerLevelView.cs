@@ -32,6 +32,9 @@ namespace Assets.Scripts.Screeps3D.World.Views
         [SerializeField] private TMP_Text _username;
         [SerializeField] private TMP_Text _roomName;
         [SerializeField] private TMP_Text _controllerLevel;
+        [SerializeField] private Image _controllerLevelImage;
+
+        private int? _roomLevel = 0;
 
         public void Init(object o)
         {
@@ -61,9 +64,26 @@ namespace Assets.Scripts.Screeps3D.World.Views
 
         private void UpdateLevel()
         {
-            if (_controllerLevel.text != data.RoomInfo.Level?.ToString())
+            if (_roomLevel != data.RoomInfo.Level)
             {
-                _controllerLevel.text = data.RoomInfo.Level?.ToString() ?? string.Empty; 
+                _roomLevel = data.RoomInfo.Level;
+
+                _controllerLevel.text = data.RoomInfo.Level?.ToString() ?? string.Empty;
+
+                switch (_roomLevel)
+                {
+                    case 8: _controllerLevelImage.fillAmount = 1f; break;
+                    case 7: _controllerLevelImage.fillAmount = 0.875f; break;
+                    case 6: _controllerLevelImage.fillAmount = 0.75f; break;
+                    case 5: _controllerLevelImage.fillAmount = 0.625f; break;
+                    case 4: _controllerLevelImage.fillAmount = 0.5f; break;
+                    case 3: _controllerLevelImage.fillAmount = 0.375f; break;
+                    case 2: _controllerLevelImage.fillAmount = 0.25f; break;
+                    case 1: _controllerLevelImage.fillAmount = 0.125f; break;
+                    default:
+                        _controllerLevelImage.fillAmount = 0f;
+                        break;
+                }
             }
         }
 
@@ -113,6 +133,8 @@ namespace Assets.Scripts.Screeps3D.World.Views
             return user != null && data.Room.Shown;
         }
 
+
+
         private void Update()
         {
             // if pivot.localRotation.x is 0.70 we are looking top down, 0 is at room level / in the ground, we need to determine some sort of treshhold
@@ -120,12 +142,36 @@ namespace Assets.Scripts.Screeps3D.World.Views
             //Debug.Log(CameraRig.Position);
             
 
-            if (OverlayShouldBeShown(data.RoomInfo.User) && CameraHasCorrectHeight())
+            if (OverlayShouldBeShown(data?.RoomInfo?.User) && CameraHasCorrectHeight())
             {
                 UpdateUser(data.RoomInfo.User);
                 ScaleBadge();
                 UpdateLevel();
                 _canvas.gameObject.SetActive(true);
+                //this.transform.LookAt(Camera.main.transform.position);
+                //this.transform.rotation = Quaternion.LookRotation(Camera.main.transform.position) * Quaternion.Euler(0, 0, 90);
+                //Debug.Log(Camera.main.transform.rotation);
+
+
+                // TOP DOWN camera, Pivot Rotation.X = 90, y = 0 Z = 0
+                // TOP DOWN LOOKING EAST X = 90 Z = -90
+                // SOUTH  X = 90 Z = 175
+                // WEST = X = 90 Z = 90
+                // We need the absolute value, cause it goes negative when we move the other way
+                // Pivot.X controls the angle, if it is 58.5 and we are looking east Z = 0 and Y = 90
+                //var cameraAtCanvasHeight = new Vector3(Camera.main.transform.position.x, Camera.main.transform.position.y, this.transform.position.z);
+                //Debug.Log(Vector3.Angle(this.transform.position, cameraAtCanvasHeight));
+
+
+                // W ---- N --- E
+                //    y -50 ---- y = 50
+
+                //else if (Input.GetKeyDown(KeyCode.H))
+                //{
+                //    // Rotates corect against  east // rotating things messes up the height / angle check though might need to be refined
+                //    _canvas.transform.localRotation *= Quaternion.AngleAxis(90, Vector3.back);
+                //}
+
             }
             else
             {
@@ -136,7 +182,7 @@ namespace Assets.Scripts.Screeps3D.World.Views
 
         private static bool CameraHasCorrectHeight()
         {
-            return CameraRig.PivotLocalRotation.x > overlayCameraAngleThreshold && CameraRig.BoomLocalPosition.z < overlayCameraHeightThreshold;
+            return /*CameraRig.PivotLocalRotation.x > overlayCameraAngleThreshold &&*/ CameraRig.BoomLocalPosition.z < overlayCameraHeightThreshold;
         }
 
         // TODO: we need an update trigger for when new data is recieved.

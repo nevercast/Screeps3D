@@ -17,10 +17,6 @@ namespace Common
         [SerializeField] private float _minZoom = 1;
         [SerializeField] private float _maxZoom = 400;
 
-        
-        
-        
-
         public Action OnTargetReached;
 
         public static Vector3 Rotation

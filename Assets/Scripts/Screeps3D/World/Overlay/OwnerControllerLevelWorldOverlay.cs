@@ -62,6 +62,16 @@ namespace Screeps3D.World.Views
 
         }
 
+        private enum LookingDirection
+        {
+            North,
+            East,
+            South,
+            West
+        }
+
+        private LookingDirection _lookingDirection = LookingDirection.North;
+
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.KeypadPlus))
@@ -86,6 +96,29 @@ namespace Screeps3D.World.Views
                 Debug.Log($"overlayCameraHeightThreshold: {OwnerControllerLevelView.overlayCameraHeightThreshold}");
             }
 
+            //Debug.Log(CameraRig.Position);
+            //Debug.Log(PlayerPosition.Instance.transform.position);
+            //Debug.Log(Vector3.Angle(CameraRig.Position, PlayerPosition.Instance.transform.position));
+            //Debug.Log(CameraRig.Rotation);
+            // dpending if you rotate left or right, the y value will be negative or positive
+            // it increases and increases and increases in either direction
+            if (CameraRig.Rotation.y >= -50 && CameraRig.Rotation.y <= 50)
+            {
+                _lookingDirection = LookingDirection.North;
+            }
+            else if (CameraRig.Rotation.y >= 50 && CameraRig.Rotation.y <= 145)
+            {
+                _lookingDirection = LookingDirection.East;
+            }
+            else if (CameraRig.Rotation.y >= 145 || CameraRig.Rotation.y <= 225)
+            {
+                _lookingDirection = LookingDirection.South;
+            }
+            else if (CameraRig.Rotation.y >= 225 || CameraRig.Rotation.y <= 320)
+            {
+                _lookingDirection = LookingDirection.West;
+            }
+            //Debug.Log(_lookingDirection);
         }
 
     }
