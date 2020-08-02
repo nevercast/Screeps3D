@@ -56,28 +56,6 @@ namespace Screeps3D.World.Views
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.KeypadPlus))
-            {
-                OwnerControllerLevelView.overlayCameraAngleThreshold += 0.1f;
-                Debug.Log($"overlayCameraAngleThreshold: {OwnerControllerLevelView.overlayCameraAngleThreshold}");
-            }
-            else if (Input.GetKeyDown(KeyCode.KeypadMinus))
-            {
-                OwnerControllerLevelView.overlayCameraAngleThreshold -= 0.1f;
-                Debug.Log($"overlayCameraAngleThreshold: {OwnerControllerLevelView.overlayCameraAngleThreshold}");
-            }
-
-            if (Input.GetKeyUp(KeyCode.Keypad9))
-            {
-                OwnerControllerLevelView.overlayCameraHeightThreshold -= 10f;
-                Debug.Log($"overlayCameraHeightThreshold: {OwnerControllerLevelView.overlayCameraHeightThreshold}");
-            }
-            else if (Input.GetKeyUp(KeyCode.Keypad6))
-            {
-                OwnerControllerLevelView.overlayCameraHeightThreshold += 10f;
-                Debug.Log($"overlayCameraHeightThreshold: {OwnerControllerLevelView.overlayCameraHeightThreshold}");
-            }
-
             //Debug.Log(CameraRig.Position);
             //Debug.Log(PlayerPosition.Instance.transform.position);
             //Debug.Log(Vector3.Angle(CameraRig.Position, PlayerPosition.Instance.transform.position));

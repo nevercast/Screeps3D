@@ -18,9 +18,12 @@ namespace Assets.Scripts.Screeps3D.World.Views
 {
     public class OwnerControllerLevelView : MonoBehaviour, IWorldOverlayViewComponent
     {
+        [Setting("Overlay/Owner View", "Show roomname")]
+        private static bool showRoomName = true;
+
         private static float overlayHeight = 10f;
-        [Setting("Overlay/Owner View", "Camera Height Threshold")]
-        public static float overlayCameraHeightThreshold = -250;
+
+        private static float overlayCameraHeightThreshold = -200;
         [Setting("Overlay/Owner View", "Camera Angle Threshold")]
         public static float overlayCameraAngleThreshold = 0.25f;
 
@@ -35,6 +38,12 @@ namespace Assets.Scripts.Screeps3D.World.Views
         [SerializeField] private Image _controllerLevelImage;
 
         private int? _roomLevel = 0;
+
+        [Setting("Overlay/Owner View", "Camera Height Threshold")]
+        public static float OverlayCameraHeightThreshold {
+            get => overlayCameraHeightThreshold * -1;
+            set => overlayCameraHeightThreshold =  value * -1;
+        }
 
         public void Init(object o)
         {
@@ -51,6 +60,7 @@ namespace Assets.Scripts.Screeps3D.World.Views
 
             if (OverlayShouldBeShown(user))
             {
+                _roomName.enabled = showRoomName;
                 _canvas.gameObject.SetActive(true);
                 UpdateUser(user);
                 ScaleBadge();
@@ -144,6 +154,7 @@ namespace Assets.Scripts.Screeps3D.World.Views
 
             if (OverlayShouldBeShown(data?.RoomInfo?.User) && CameraHasCorrectHeight())
             {
+                _roomName.enabled = showRoomName;
                 UpdateUser(data.RoomInfo.User);
                 ScaleBadge();
                 UpdateLevel();
