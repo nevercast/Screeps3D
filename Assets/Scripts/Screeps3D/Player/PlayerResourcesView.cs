@@ -15,6 +15,7 @@ namespace Screeps3D.Player
         private static bool showResources = true;
 
         [SerializeField] private HorizontalLayoutGroup LayoutGroup = default;
+        private RectTransform layoutGroupRect = default;
 
         [SerializeField] private RectTransform creditsContainer = default;
         [SerializeField] private TMP_Text credits = default;
@@ -31,6 +32,7 @@ namespace Screeps3D.Player
         private void Start()
         {
             ScreepsAPI.Resources.OnResources += OnResources;
+            layoutGroupRect = LayoutGroup.GetComponent<RectTransform>();
         }
 
         private void OnDisable()
@@ -57,9 +59,9 @@ namespace Screeps3D.Player
 
             if (ScreepsAPI.IsConnected && ScreepsAPI.Me != null && ScreepsAPI.Resources != null)
             {
-                credits.text = ScreepsAPI.Resources.Credits.ToString();
+                credits.text = ScreepsAPI.Resources.Credits.ToString("N0");
                 cpuUnlocks.text = ScreepsAPI.Resources.CPUUnlocks.ToString();
-                pixels.text = ScreepsAPI.Resources.Pixels.ToString();
+                pixels.text = ScreepsAPI.Resources.Pixels.ToString("N0");
                 keys.text = ScreepsAPI.Resources.Keys.ToString();
 
                 creditsContainer.gameObject.SetActive(ScreepsAPI.Resources.Credits > 0);
@@ -73,8 +75,25 @@ namespace Screeps3D.Player
 
                 keysContainer.gameObject.SetActive(ScreepsAPI.Resources.Keys > 0);
                 keysContainer.sizeDelta = new Vector2(keys.rectTransform.sizeDelta.x, keysContainer.sizeDelta.y);
-                LayoutGroup.CalculateLayoutInputHorizontal();
+
+                float layoutsizeX = LayoutGroup.padding.right + LayoutGroup.padding.left;
+                layoutsizeX += GetWidthIfActive(creditsContainer);
+                layoutsizeX += GetWidthIfActive(cpuUnlocksContainer);
+                layoutsizeX += GetWidthIfActive(pixelsContainer);
+                layoutsizeX += GetWidthIfActive(keysContainer);
+
+                layoutGroupRect.sizeDelta = new Vector2(layoutsizeX, layoutGroupRect.sizeDelta.y);
             }
+        }
+
+        private float GetWidthIfActive(RectTransform container)
+        {
+            if (container.gameObject.activeSelf)
+            {
+                return container.sizeDelta.x;
+            }
+
+            return 0;
         }
     }
 }
