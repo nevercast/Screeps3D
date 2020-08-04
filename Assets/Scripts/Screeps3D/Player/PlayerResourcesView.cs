@@ -14,7 +14,7 @@ namespace Screeps3D.Player
         [Setting("Gameplay/UI", "Show Resources", "Should resources be shown or not")]
         private static bool showResources = true;
 
-        [SerializeField] private HorizontalLayoutGroup LayoutGroup = default;
+        [SerializeField] private HorizontalLayoutGroup SecondaryLine = default;
         private RectTransform layoutGroupRect = default;
 
         [SerializeField] private RectTransform creditsContainer = default;
@@ -32,7 +32,7 @@ namespace Screeps3D.Player
         private void Start()
         {
             ScreepsAPI.Resources.OnResources += OnResources;
-            layoutGroupRect = LayoutGroup.GetComponent<RectTransform>();
+            layoutGroupRect = SecondaryLine.GetComponent<RectTransform>();
         }
 
         private void OnDisable()
@@ -76,8 +76,7 @@ namespace Screeps3D.Player
                 keysContainer.gameObject.SetActive(ScreepsAPI.Resources.Keys > 0);
                 keysContainer.sizeDelta = new Vector2(keys.rectTransform.sizeDelta.x, keysContainer.sizeDelta.y);
 
-                float layoutsizeX = LayoutGroup.padding.right + LayoutGroup.padding.left;
-                layoutsizeX += GetWidthIfActive(creditsContainer);
+                float layoutsizeX = SecondaryLine.padding.right + SecondaryLine.padding.left;
                 layoutsizeX += GetWidthIfActive(cpuUnlocksContainer);
                 layoutsizeX += GetWidthIfActive(pixelsContainer);
                 layoutsizeX += GetWidthIfActive(keysContainer);
