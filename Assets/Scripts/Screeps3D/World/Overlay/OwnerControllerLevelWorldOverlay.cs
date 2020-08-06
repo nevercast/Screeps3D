@@ -96,6 +96,11 @@ namespace Screeps3D.World.Views
 
                 var roomInfo = MapStatsUpdater.Instance.GetRoomInfo(PlayerPosition.Instance.ShardName, roomView.Room.RoomName);
 
+                if (roomInfo == null)
+                {
+                    continue;
+                }
+
                 if (!_views.TryGetValue(roomInfo.RoomName, out var view))
                 {
                     _views[roomInfo.RoomName] = null; // Add it with a null value to prevent repated queueing
