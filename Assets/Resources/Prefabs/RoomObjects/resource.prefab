@@ -63,6 +63,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _renderer: {fileID: 3123870964962462267}
   _scale: {fileID: 7709550432767092835}
+  _materials:
+  - {fileID: 2100000, guid: 283ff4931ac559448b843bc4b862d2f8, type: 2}
+  - {fileID: 2100000, guid: 3df6b77858ed3f248aa4c1db6f6c277c, type: 2}
+  - {fileID: 2100000, guid: 511a2d7e52ddb534bbe493f7829b0561, type: 2}
 --- !u!65 &-4629841733828211044
 BoxCollider:
   m_ObjectHideFlags: 0

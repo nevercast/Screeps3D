@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Common;
+using System.Collections.Generic;
 
 namespace Screeps3D.RoomObjects.Views
 {
@@ -7,6 +8,11 @@ namespace Screeps3D.RoomObjects.Views
     {
         [SerializeField] private Renderer _renderer = default;
         [SerializeField] private ScaleAxes _scale = default;
+
+        [SerializeField] private Material[] _materials = default;
+        private const int energyMaterialIndex = 0;
+        private const int powerMaterialIndex = 1;
+        private const int commonMaterialIndex = 2;
 
         private bool _initialized;
         private Resource _resource;
@@ -32,9 +38,12 @@ namespace Screeps3D.RoomObjects.Views
             if (!_initialized)
             {
                 if (_resource.ResourceType.Equals("energy"))
-                    _renderer.material.color = new Color(1.0f, 0.91f, 0.49f);
+                    _renderer.material = _materials[energyMaterialIndex];
+                else if (_resource.ResourceType.Equals("power"))
+                    _renderer.material = _materials[powerMaterialIndex];
                 else
-                    _renderer.material.color = new Color(1.0f, 1.0f, 1.0f);
+                    _renderer.material = _materials[commonMaterialIndex];
+
                 _initialized = true;
             }
 
