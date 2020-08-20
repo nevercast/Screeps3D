@@ -92,7 +92,8 @@ public class NukeMissileArchRenderer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        RenderArc();
+        //calling this every frame is.... bad xD performance takes a huge hit #217
+        //RenderArc();
     }
 }
 
