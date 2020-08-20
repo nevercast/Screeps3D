@@ -49,10 +49,10 @@ namespace Screeps3D.Player
         {
             if (!showResources)
             {
-                creditsContainer.gameObject.SetActive(showResources);
-                cpuUnlocksContainer.gameObject.SetActive(showResources);
-                pixelsContainer.gameObject.SetActive(showResources);
-                keysContainer.gameObject.SetActive(showResources);
+                creditsContainer?.gameObject?.SetActive(showResources);
+                cpuUnlocksContainer?.gameObject?.SetActive(showResources);
+                pixelsContainer?.gameObject?.SetActive(showResources);
+                keysContainer?.gameObject?.SetActive(showResources);
 
                 return;
             }

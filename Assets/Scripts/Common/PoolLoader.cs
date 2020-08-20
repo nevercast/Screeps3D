@@ -66,7 +66,8 @@ namespace Common
                 throw new Exception(path + " returned pooled object to unused pool");
             }
 
-            go.transform.SetParent(_parent);
+            // This causes the SelectionPanel to go wonky. with negative "margins"
+            //go.transform.SetParent(_parent);
 
             _pools[path].Push(go);
         }
