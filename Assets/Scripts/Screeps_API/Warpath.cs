@@ -1,8 +1,11 @@
-﻿using Assets.Scripts.Screeps_API.ConsoleClientAbuse;
+﻿using Assets.Scripts.Screeps_API;
+using Assets.Scripts.Screeps_API.ConsoleClientAbuse;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Screeps_API
 {
@@ -27,10 +30,83 @@ namespace Screeps_API
         {
             if (connected)
             {
-                // TODO: on official we need to start a timer that pulls data from LOAN e.g. https://www.leagueofautomatednations.com/vk/battles.json
+                if (ScreepsAPI.Cache.Type == SourceProviderType.Official)
+                {
+                    // On official we need to start a timer that pulls data from LOAN e.g. https://www.leagueofautomatednations.com/vk/battles.json
+                    // TODO: considering LOAN data is "old", we might want to sprinkle the experimental PVP endpoint ontop of this to get more accurate "pvp timestamps"
+                    StartCoroutine(GetLOANBattles());
 
-                ScreepsAPI.Socket.Subscribe(string.Format("warpath:battles", ScreepsAPI.Me.UserId), RecieveData);
-                // TODO: subscribe to server-message to display server messages in console
+                }
+                else
+                {
+                    ScreepsAPI.Socket.Subscribe(string.Format("warpath:battles", ScreepsAPI.Me.UserId), RecieveData);
+                }
+            }
+        }
+
+        private IEnumerator GetLOANBattles()
+        {
+            yield return new WaitForSecondsRealtime(20);
+
+            while (true)
+            {
+                var www = UnityWebRequest.Get($"https://www.leagueofautomatednations.com/vk/battles.json");
+
+                yield return www.SendWebRequest();
+
+                if (www.isNetworkError || www.isHttpError)
+                {
+                    Debug.Log(www.error);
+                }
+                else
+                {
+                    var responseText = www.downloadHandler.text;
+
+                    var response = new JSONObject(responseText); // Unity only supports parsing objects
+
+                    foreach (var shardName in response.keys)
+                    {
+                        var shardRooms = response[shardName];
+                        if (shardRooms != null)
+                        {
+                            HandleLOANShard(shardName, shardRooms.list);
+                        }
+                    }
+
+                    OnClassificationsUpdated?.Invoke();
+                }
+
+
+                yield return new WaitForSecondsRealtime(60); 
+            }
+        }
+
+        private void HandleLOANShard(string shardName, List<JSONObject> shardRooms)
+        {
+            Debug.Log($"Warpath: {shardName} has {shardRooms.Count} rooms");
+            foreach (var roomClassification in shardRooms)
+            {
+                var roomName = roomClassification["room"].str;
+
+                int classification = (int)roomClassification["classification"].n;
+
+                var defenderData = roomClassification["defender"];
+                var defender = defenderData != null ? defenderData.str : null; // username
+
+                var attackersJsonList = roomClassification["attackers"].list; // list of usernames
+                var attackers = attackersJsonList.Select(x => x.str);
+                // firstseen
+                // lastseen
+                // firsttick
+                var lastPvpTime = (int)roomClassification["lasttick"].n;
+
+                var powerCreepsData = roomClassification["powerCreeps"];
+                var powerCreeps = powerCreepsData != null ? powerCreepsData.list : null;
+
+                //var stronghold = (int)roomClassification["stronghold"].n; // stronghold level LOAN does not give stronghold level
+                var stronghold = 0;
+
+                CreateOrUpdateWarpathRoom(roomName, shardName, classification, defender, attackers, lastPvpTime, stronghold);
             }
         }
 
@@ -52,7 +128,6 @@ namespace Screeps_API
             {
                 UnpackWarpathData(obj);
             }
-            // TODO: LOAN parsing.
         }
 
         private void UnpackWarpathData(JSONObject obj)
@@ -96,52 +171,81 @@ namespace Screeps_API
 
                 var defender = roomClassification["defender"].str; // username
 
-                var attackers = roomClassification["attackers"].list; // list of usernames
-
+                var attackersJsonList = roomClassification["attackers"].list; // list of usernames
+                var attackers = attackersJsonList.Select(x => x.str);
                 var lastPvpTime = (int)roomClassification["lastPvpTime"].n;
 
                 var powerCreeps = roomClassification["powerCreeps"].list; // list of power creeps with
 
                 var stronghold = (int)roomClassification["stronghold"].n; // stronghold level
 
-                // Try and find room, else make a new one.
-                var room = Rooms.SingleOrDefault(r => r.RoomName == roomName && r.Shard == shardName);
+                CreateOrUpdateWarpathRoom(roomName, shardName, classification, defender, attackers, lastPvpTime, stronghold);
 
-                if (room == null)
-                {
-                    room = new WarpathRoom(shardName, roomName);
-                    Rooms.Add(room);
-                }
-
-                // TODO: make event and raise classification has gone up.
-                room.Classification = (Classification)classification;
-
-                if (room.Defender == null || room.Defender.Username != defender)
-                {
-                    room.Defender = ScreepsAPI.UserManager.GetUserByName(defender);
-                }
-
-                room.Attackers.Clear();
-                foreach (var attacker in attackers)
-                {
-                    var username = attacker.str;
-                    var user = ScreepsAPI.UserManager.GetUserByName(username);
-                    if (user != null)
-                    {
-                        room.Attackers.Add(user);
-                    }
-                }
-
-                room.LastPvpTime = lastPvpTime;
-
-                // TODO: Power creeps
-
-                room.StrongholdLevel = stronghold;
-                
             }
 
             OnClassificationsUpdated?.Invoke();
 
+        }
+
+        private void CreateOrUpdateWarpathRoom(string roomName, string shardName, int classification, string defender, IEnumerable<string> attackers, int lastPvpTime, int stronghold)
+        {
+            // Try and find room, else make a new one.
+            var room = Rooms.SingleOrDefault(r => r.RoomName == roomName && r.Shard == shardName);
+
+            if (room == null)
+            {
+                room = new WarpathRoom(shardName, roomName);
+                Rooms.Add(room);
+                StartCoroutine(ScreepsAPI.Http.GetRoomTexture(shardName, roomName, (roomTexture) =>
+                {
+                    room.RoomTexture = roomTexture;
+
+                    OnClassificationsUpdated?.Invoke();
+                }));
+            }
+
+            if (room.ShardInfo == null)
+            {
+                room.ShardInfo = ScreepsAPI.ShardInfo[room.Shard];
+            }
+
+            // TODO: make event and raise classification has gone up.
+            room.Classification = (Classification)classification;
+
+            if (room.Defender == null || room.Defender.UserId == null || room.Defender.Username != defender)
+            {
+                room.Defender = ScreepsAPI.UserManager.GetUserByName(defender);
+                if (room.Defender == null)
+                {
+                    ScreepsAPI.Http.GetUserByName(defender, json => {
+                        room.Defender = ScreepsAPI.UserManager.CacheUser(new JSONObject(json));
+                        //OnClassificationsUpdated?.Invoke();
+                    });
+                }
+            }
+
+            room.Attackers.Clear();
+            foreach (var attacker in attackers)
+            {
+                var user = ScreepsAPI.UserManager.GetUserByName(attacker);
+                if (user != null)
+                {
+                    room.Attackers.Add(user);
+                }
+                else
+                {
+                    ScreepsAPI.Http.GetUserByName(attacker, json => {
+                        room.Attackers.Add(ScreepsAPI.UserManager.CacheUser(new JSONObject(json)));
+                        //OnClassificationsUpdated?.Invoke();
+                    });
+                }
+            }
+
+            room.LastPvpTime = lastPvpTime;
+
+            // TODO: Power creeps
+
+            room.StrongholdLevel = stronghold;
         }
 
         public class WarpathRoom
@@ -153,6 +257,8 @@ namespace Screeps_API
                 Attackers = new List<ScreepsUser>();
             }
 
+            public Texture RoomTexture { get; internal set; }
+
             public string RoomName { get; internal set; }
             public string Shard { get; internal set; }
             public Classification Classification { get; internal set; }
@@ -161,6 +267,7 @@ namespace Screeps_API
             public List<ScreepsUser> Attackers { get; internal set; }
             public int LastPvpTime { get; internal set; }
             public int StrongholdLevel { get; internal set; }
+            public ShardInfoDto ShardInfo { get; internal set; }
         }
 
         /// <summary>

@@ -437,6 +437,23 @@ namespace Screeps_API
             return AddObjectIntent(shard, room, "destroyStructure", list, onSuccess);
         }
 
+        public IEnumerator<UnityWebRequestAsyncOperation> GetUserByName(string username, Action<string> onSuccess, bool noNotification = false)
+        {
+            // https://screeps.com/api/user/find?username=thmsn
+            // {"ok":1,"user":{"_id":"5a44e109ac5a5f1d0146916e","username":"thmsn","badge":{"type":16,"color1":"#e026e3","color2":"#060606","color3":"#020202","param":54,"flip":false},"gcl":72599362}}
+
+            return Request("GET", $"/api/user/find?username={username}", onSuccess: onSuccess, noNotification: noNotification);
+        }
+
+        public IEnumerator<UnityWebRequestAsyncOperation> GetUsersRoomsByUserId(string userId, Action<string> onSuccess, bool noNotification = false)
+        {
+            // https://screeps.com/api/user/rooms?id=5a44e109ac5a5f1d0146916e
+            // {"ok":1,"shards":{"shard0":[],"shard1":[],"shard2":[],"shard3":["E18S37","E19S36","E19S38"]},"reservations":{"shard0":[],"shard1":[],"shard2":[],"shard3":[]}}
+            return Request("GET", $"/api/user/find?username={userId}", onSuccess: onSuccess, noNotification: noNotification);
+        }
+
+
+
         /* Experimental */
         public IEnumerator<UnityWebRequestAsyncOperation> GetExperimentalNukes(Action<string> onSuccess)
         {
@@ -446,6 +463,31 @@ namespace Screeps_API
             */
 
             return Request("GET", "/api/experimental/nukes", onSuccess: onSuccess);
+        }
+
+        public IEnumerator GetRoomTexture(string shard, string roomName, Action<Texture> response)
+        {
+            var roomTextureUrl = $"https://d3os7yery2usni.cloudfront.net/map/{shard}/{roomName}.png";
+
+            if (ScreepsAPI.Cache.Type != SourceProviderType.Official)
+            {
+                // Private servers runs with a different url.
+                roomTextureUrl = ScreepsAPI.Cache.Address.Http($"/assets/map/{roomName}.png");
+            }
+
+            UnityWebRequest www = UnityWebRequestTexture.GetTexture(roomTextureUrl);
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.Log(www.error);
+            }
+            else
+            {
+                Texture myTexture = ((DownloadHandlerTexture)www.downloadHandler).texture;
+                //Texture myTexture = DownloadHandlerTexture.GetContent(www);
+                response(myTexture);
+            }
         }
     }
 }
