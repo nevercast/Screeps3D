@@ -32,7 +32,7 @@ namespace Screeps3D.RoomObjects
              */
             var controller = this.Room.Objects.SingleOrDefault(ro => ro.Value.Type == Constants.TypeController).Value as Controller;
             var myRoom = this.UserId == controller?.Owner?.UserId;
-            if (this.UserId != ScreepsAPI.Me.UserId && !myRoom || this.Type == Constants.TypeController)
+            if (!myRoom  || this.UserId != ScreepsAPI.Me.UserId || this.Type == Constants.TypeController)
             {
                 return new List<IRoomObjectPanelButton>();
             }
