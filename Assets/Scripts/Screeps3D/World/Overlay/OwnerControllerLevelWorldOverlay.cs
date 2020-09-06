@@ -89,7 +89,7 @@ namespace Screeps3D.World.Views
             foreach (var col in Physics.OverlapSphere(playerPosition, OverlayDistance, 1 << 10))
             {
                 var roomView = col.GetComponent<RoomView>();
-                if (!roomView || Vector3.Distance(playerPosition, roomView.Room.Position) > OverlayDistance)
+                if (roomView == null || roomView.Room == null || Vector3.Distance(playerPosition, roomView.Room.Position) > OverlayDistance)
                 {
                     continue;
                 }
