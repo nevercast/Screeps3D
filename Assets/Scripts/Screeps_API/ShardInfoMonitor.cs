@@ -53,7 +53,7 @@ namespace Assets.Scripts.Screeps_API
                     var shardsData = shardInfoData["shards"];
                     if (shardsData == null)
                     {
-                        Debug.LogWarning("no shards foound? " + jsonShardInfo); // we recieved an empty jsonShardInfo object
+                        Debug.LogError("no shards foound? " + jsonShardInfo); // we recieved an empty jsonShardInfo object
                         return;
                     }
 
@@ -62,7 +62,9 @@ namespace Assets.Scripts.Screeps_API
                     {
                         var tickRateString = shard["tick"].n;
 
-                        var shardName = shard["name"].str;
+                        var shardNameObject = shard["name"];
+
+                        var shardName = shardNameObject != null ? shardNameObject.str : "shard0";
                         if (!ShardInfo.TryGetValue(shardName, out var shardInfo))
                         {
                             shardInfo = new ShardInfoDto();
