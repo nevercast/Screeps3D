@@ -25,6 +25,12 @@ namespace Screeps3D
 
         public RoomInfo GetRoomInfo(string shardName, string roomName)
         {
+            if (string.IsNullOrWhiteSpace(shardName))
+            {
+                Debug.LogError("We recieved an empty shardname");
+                return null;
+            }
+
             if (RoomInfo.TryGetValue(shardName, out var shardRoomInfo))
             {
                 if (shardRoomInfo.TryGetValue(roomName, out var roomInfo))
