@@ -44,6 +44,8 @@ namespace Screeps3D.Player
 
             if (OnRoomChange != null)
                 OnRoomChange();
+
+            // TODO: Add ShardChangeEvent
         }
     }
 }
