@@ -7,6 +7,7 @@ using Screeps_API;
 using Screeps3D.Player;
 using Screeps3D.Rooms;
 using Screeps3D.Rooms.Views;
+using UnityEditor;
 using UnityEngine;
 
 namespace Screeps3D.World.Views
@@ -16,6 +17,8 @@ namespace Screeps3D.World.Views
 
     public class MapVisualWorldOverlay : MonoBehaviour
     {
+        private static Transform _parent;
+
         private Queue<JSONObject> queue = new Queue<JSONObject>();
 
         private Dictionary<string, WorldView> _views = new Dictionary<string, WorldView>();
@@ -38,6 +41,9 @@ namespace Screeps3D.World.Views
 
         private void Start()
         {
+            _parent = new GameObject("MapVisual").transform;
+            _parent.SetParent(this.gameObject.transform);
+
             if (ScreepsAPI.Cache.Official)
             {
                 // TODO: Handle shard change. 
@@ -105,20 +111,51 @@ namespace Screeps3D.World.Views
 
         private void UnpackMapVisuals(JSONObject data)
         {
+            //// debug to allow testing
+            //if (_parent.transform.childCount > 0)
+            //{
+            //    return;
+            //}
+
+            foreach (Transform child in _parent.transform)
+            {
+                Destroy(child.gameObject);
+            }
 
             // https://en.wikipedia.org/wiki/JSON_streaming is used for map visuals it appears to be newline delimted.
             // 
             //data = new JSONObject(data.str)
 
-            Debug.LogError("UnpackMapVisuals: " + data.ToString());
+            //Debug.LogError("UnpackMapVisuals: " + data.ToString());
             var list = data.str.Replace("\\\"", "\"").Split(new string[] { "}\\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var visual in list)
             {
-                var item = new JSONObject(visual);
-                Debug.LogError($"{item.ToString()} ");
+                //Debug.LogError($"visual: {visual}");
+                var item = new JSONObject(visual + "}" /* add end of json object back */);
+                //Debug.LogError($"{item.ToString()}");
                 var type = item["t"]; // l = line, c = circle, r = rectangle ,p = poly, t = text
-                //Debug.LogError($"{type.str} => {item.ToString()} ");
+
+                // TODO: being able to generate a visual room object is something that should be extracted out and utilized for room visuals as well
+                // We might need a general purpose "View" factory, that ObjectViewFactory and WorldViewFactory could inherit from
+                switch (type.str)
+                {
+                    case "l": // line
+                        
+                        DrawLine(item);
+
+                        break;
+                    case "c": // circle
+                        DrawCircle(item);
+
+                        break;
+                    case "r": // rectangle
+                        break;
+                    case "p": // poly
+                        break;
+                    case "t": // text
+                        break;
+                }
             }
 
 
@@ -195,6 +232,80 @@ namespace Screeps3D.World.Views
                 }
 
              * */
+        }
+
+        private static void DrawCircle(JSONObject item)
+        {
+            
+            var x = item["x"];
+            var y = item["y"];
+            var n = item["n"]; // for some reason n is removed should contain W2N4
+
+            var room = RoomManager.Instance.Get(n.str, PlayerPosition.Instance.ShardName);
+            var pos = PosUtility.Convert((int)x.n, (int)y.n, room) + new Vector3Int(0, 10, 0);
+
+            var style = item["s"]; // optional
+            var radiusObject = style != null ? style["radius"] : null; // number, default is 10
+            var fill = style != null ? style["fill"] : null;  // hex color code, default is #ffffff
+            var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
+            var stroke = style != null ? style["stroke"] : null;  // hex color code, default is undefined (no stroke)
+            var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
+            var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
+
+            var go = new GameObject($"circle", typeof(LineRenderer)); // TODO: should probably render it with something else than a line renderer to get support for fill and stroke.
+            go.transform.SetParent(_parent);
+            go.transform.position = room.Position + new Vector3(25, 10f/*overlay height*/, 25); 
+
+            var line = go.GetComponent<LineRenderer>();
+
+            //float lineWidth = 1f;
+            float radius = radiusObject != null ? radiusObject.n : 10f;
+
+            // Calculate points in circle
+            var segments = 360;
+            //line.useWorldSpace = false;
+            //line.startWidth = lineWidth;
+            //line.endWidth = lineWidth;
+            line.positionCount = segments + 1;
+
+            var pointCount = segments + 1; // add extra point to make startpoint and endpoint the same to close the circle
+            var points = new Vector3[pointCount];
+
+            for (int i = 0; i < pointCount; i++)
+            {
+                var rad = Mathf.Deg2Rad * (i * 360f / segments);
+                points[i] = new Vector3((Mathf.Sin(rad) * radius) - x.n, 10f, (Mathf.Cos(rad) * radius) + y.n); // to align it properly according to room center.
+            }
+
+
+            line.SetPositions(points);
+        }
+
+        private static void DrawLine(JSONObject item)
+        {
+            var x1 = item["x1"]; // X
+            var y1 = item["y1"]; // Y
+            var n1 = item["n1"]; // roomName
+            var room1 = RoomManager.Instance.Get(n1.str, PlayerPosition.Instance.ShardName);
+            var pos1 = PosUtility.Convert((int)x1.n, (int)y1.n, room1);
+            var x2 = item["x2"]; // X
+            var y2 = item["y2"]; // Y
+            var n2 = item["n2"]; // roomName
+
+            var room2 = RoomManager.Instance.Get(n2.str, PlayerPosition.Instance.ShardName);
+            var pos2 = PosUtility.Convert((int)x2.n, (int)y2.n, room2);
+            var style = item["s"]; // optional
+            var width = style != null ? style["width"] : null; // number, default is 0.1
+            var color = style != null ? style["color"] : null; // hex color code, default is #ffffff
+            var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
+            var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
+
+            var go = new GameObject($"line", typeof(LineRenderer));
+            go.transform.SetParent(_parent);
+            go.transform.position = room1.Position + new Vector3(25, 10f/*overlay height*/, 25); // Center of the room
+
+            var line = go.GetComponent<LineRenderer>();
+            line.SetPositions(new Vector3[] { pos1 + new Vector3Int(0, 10, 0), pos2 + new Vector3Int(0, 10, 0) });
         }
 
         ////private void LoadViewsByPlayerPosition()
