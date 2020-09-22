@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts.Screeps3D;
 using Assets.Scripts.Screeps3D.World.Views;
 using Common;
@@ -65,7 +66,7 @@ namespace Screeps3D.World.Views
 
         public const float OverlayDistance = 200;
 
-        public const float OverlayHeight = 20;
+        public const float OverlayHeight = 10;
 
 
         private enum LookingDirection
@@ -157,6 +158,7 @@ namespace Screeps3D.World.Views
                         DrawRectangle(item);
                         break;
                     case "p": // poly
+                        DrawPoly(item);
                         break;
                     case "t": // text
                         break;
@@ -238,6 +240,60 @@ namespace Screeps3D.World.Views
 
              * */
         }
+
+        private static void DrawPoly(JSONObject item)
+        {
+            var pointsObject = item["points"];
+
+            var style = item["s"]; // optional
+            var fill = style != null ? style["fill"] : null;  // hex color code, default is #ffffff
+            var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
+            var stroke = style != null ? style["stroke"] : null;  // hex color code, default is undefined (no stroke)
+            var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
+            var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
+
+
+            var points = new List<Vector3>();
+
+            foreach (var point in pointsObject.list)
+            {
+                var x = point["x"];
+                var y = point["y"];
+                var n = point["n"];
+
+                var room = RoomManager.Instance.Get(n.str, PlayerPosition.Instance.ShardName);
+                var pos = PosUtility.Convert((int)x.n, (int)y.n, room) + Vector3.up * OverlayHeight;
+                points.Add(pos);
+            }
+            var firstPoint = points.FirstOrDefault();
+            points.Add(firstPoint);
+
+            var go = new GameObject($"rect-", typeof(LineRenderer)); // TODO: should probably render it with something else than a line renderer to get support for fill and stroke.
+            go.transform.SetParent(_parent);
+            //go.transform.position = firstPoint + Vector3.up * OverlayHeight;
+            //go.transform.position = room.Position + new Vector3(25, OverlayHeight, 25); // Center of the room;
+
+            var line = go.GetComponent<LineRenderer>();
+            line.material = new Material(_lineShader);
+
+            if (stroke == null || !ColorUtility.TryParseHtmlString(stroke.str, out var strokeColor))
+            {
+                strokeColor = Color.white; // default should be no stroke
+            }
+
+            line.startColor = strokeColor;
+            line.endColor = strokeColor;
+
+            line.material.SetColor(ShaderKeys.HDRPLit.Color, strokeColor);
+
+            //line.useWorldSpace = false; // make it relative to the gameobject.
+
+            
+
+            line.positionCount = points.Count;
+            line.SetPositions(points.ToArray());
+        }
+
 
         private static void DrawRectangle(JSONObject item)
         {
