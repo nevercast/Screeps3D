@@ -17,6 +17,7 @@ namespace Screeps3D.World.Views
 
     public class MapVisualWorldOverlay : MonoBehaviour
     {
+        private static Shader _lineShader;
         private static Transform _parent;
 
         private Queue<JSONObject> queue = new Queue<JSONObject>();
@@ -41,6 +42,7 @@ namespace Screeps3D.World.Views
 
         private void Start()
         {
+            _lineShader = Shader.Find("HDRP/Lit");
             _parent = new GameObject("MapVisual").transform;
             _parent.SetParent(this.gameObject.transform);
 
@@ -152,6 +154,7 @@ namespace Screeps3D.World.Views
 
                         break;
                     case "r": // rectangle
+                        DrawRectangle(item);
                         break;
                     case "p": // poly
                         break;
@@ -236,12 +239,60 @@ namespace Screeps3D.World.Views
              * */
         }
 
-        private static void DrawCircle(JSONObject item)
+        private static void DrawRectangle(JSONObject item)
         {
-            Debug.LogError("circle: " + item.ToString());
             var x = item["x"];
             var y = item["y"];
-            var n = item["n"]; // for some reason n is removed should contain W2N4
+            var n = item["n"];
+            var w = item["w"];
+            var h = item["h"];
+
+            var room = RoomManager.Instance.Get(n.str, PlayerPosition.Instance.ShardName);
+            var pos = PosUtility.Convert((int)x.n, (int)y.n, room);
+
+            var style = item["s"]; // optional
+            var fill = style != null ? style["fill"] : null;  // hex color code, default is #ffffff
+            var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
+            var stroke = style != null ? style["stroke"] : null;  // hex color code, default is undefined (no stroke)
+            var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
+            var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
+
+            var go = new GameObject($"rect-{n.str}-{x.n}-{y.n}", typeof(LineRenderer)); // TODO: should probably render it with something else than a line renderer to get support for fill and stroke.
+            go.transform.SetParent(_parent);
+            go.transform.position = pos + Vector3.up * OverlayHeight;
+            //go.transform.position = room.Position + new Vector3(25, OverlayHeight, 25); // Center of the room;
+
+            var line = go.GetComponent<LineRenderer>();
+            line.material = new Material(_lineShader);
+
+            if (stroke == null || !ColorUtility.TryParseHtmlString(stroke.str, out var strokeColor))
+            {
+                strokeColor = Color.white; // default should be no stroke
+            }
+
+            line.startColor = strokeColor;
+            line.endColor = strokeColor;
+
+            line.material.SetColor(ShaderKeys.HDRPLit.Color, strokeColor);
+
+            line.useWorldSpace = false; // make it relative to the gameobject.
+
+            var points = new Vector3[5];
+            points[0] = new Vector3(0, 0, 0);
+            points[1] = new Vector3(w.n, 0, 0);
+            points[2] = new Vector3(w.n, 0, -h.n);
+            points[3] = new Vector3(0, 0, -h.n);
+            points[4] = new Vector3(0, 0, 0);
+
+            line.positionCount = points.Length;
+            line.SetPositions(points);
+        }
+
+        private static void DrawCircle(JSONObject item)
+        {
+            var x = item["x"];
+            var y = item["y"];
+            var n = item["n"];
 
             var room = RoomManager.Instance.Get(n.str, PlayerPosition.Instance.ShardName);
             var pos = PosUtility.Convert((int)x.n, (int)y.n, room);
@@ -259,6 +310,7 @@ namespace Screeps3D.World.Views
             go.transform.position = room.Position + new Vector3(25, OverlayHeight, 25); // Center of the room;
 
             var line = go.GetComponent<LineRenderer>();
+            line.material = new Material(_lineShader);
 
             if (stroke == null  || !ColorUtility.TryParseHtmlString(stroke.str, out var strokeColor))
             {
@@ -315,6 +367,8 @@ namespace Screeps3D.World.Views
             go.transform.position = room1.Position + new Vector3(25, OverlayHeight, 25); // Center of the room
 
             var line = go.GetComponent<LineRenderer>();
+            line.material = new Material(_lineShader);
+
             //line.useWorldSpace = false; // make it relative to the gameobject.
             line.SetPositions(new Vector3[] { pos1, pos2 });
         }
