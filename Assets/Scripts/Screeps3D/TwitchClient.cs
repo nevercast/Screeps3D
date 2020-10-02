@@ -63,11 +63,11 @@ namespace Assets.Scripts.Screeps3D
 
         public Client client;
 
-
         public event EventHandler<GoToRoomEventArgs> OnGoToRoom;
 
-        private void Awake()
+        public override void Awake()
         {
+            base.Awake();
             OnEnableIntegration += TwitchClient_OnEnableIntegration;
         }
 
@@ -89,6 +89,11 @@ namespace Assets.Scripts.Screeps3D
         {
             // Script should be running always, this is handled in editor settings though, setting it like this is not reccomended.
             // Application.runInBackground = true;
+
+            if (client != null && !client.IsConnected)
+            {
+                client.Connect();
+            }
         }
 
         private void OnDestroy()
@@ -107,7 +112,7 @@ namespace Assets.Scripts.Screeps3D
                 client.OnChatCommandReceived -= Client_OnChatCommandReceived;
 
                 client.OnMessageReceived -= Client_OnMessageReceived;
-                client.Disconnect(); 
+                client.Disconnect();
             }
         }
 
@@ -169,7 +174,10 @@ namespace Assets.Scripts.Screeps3D
                     client.DisableAutoPong = false;
                 }
 
-                client.Connect();
+                if (!client.IsConnected)
+                {
+                    client.Connect();
+                }
             }
             catch (Exception ex)
             {
