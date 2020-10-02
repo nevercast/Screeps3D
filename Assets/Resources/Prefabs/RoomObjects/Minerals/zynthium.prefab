@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5736882474291348844}
   - component: {fileID: 2623656614217665413}
   m_Layer: 9
-  m_Name: Area Light
+  m_Name: Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3497241518877670516}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4267615043711733177}
@@ -44,7 +44,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 1, b: 0, a: 1}
-  m_Intensity: 1.2732395
+  m_Intensity: 0.07957747
   m_Range: 10
   m_SpotAngle: 120
   m_InnerSpotAngle: 1
@@ -90,8 +90,8 @@ Light:
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 10}
-  m_UseBoundingSphereOverride: 1
-  m_ShadowRadius: 0
+  m_UseBoundingSphereOverride: 0
+  m_ShadowRadius: 1
   m_ShadowAngle: 0.001
 --- !u!114 &2623656614217665413
 MonoBehaviour:
@@ -105,12 +105,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 10
+  m_Version: 11
   m_ObsoleteShadowResolutionTier: 1
   m_ObsoleteUseShadowQualitySettings: 0
   m_ObsoleteCustomShadowResolution: 512
   m_ObsoleteContactShadows: 0
-  m_PointlightHDType: 1
+  m_PointlightHDType: 0
   m_SpotLightShape: 0
   m_AreaLightShape: 0
   m_Intensity: 1
@@ -127,7 +127,7 @@ MonoBehaviour:
   m_ShapeWidth: 0.5
   m_ShapeHeight: 0.5
   m_AspectRatio: 1
-  m_ShapeRadius: 0
+  m_ShapeRadius: 1
   m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 1
@@ -203,6 +203,7 @@ MonoBehaviour:
   showAdditionalSettings: 0
   m_AreaLightEmissiveMeshShadowCastingMode: 0
   m_AreaLightEmissiveMeshMotionVectorGenerationMode: 0
+  m_AreaLightEmissiveMeshLayer: -1
 --- !u!1001 &4263076755721218907
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -210,6 +211,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1334440284220232, guid: 73337e8c70133be46886aad64643191b, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1470691814702614, guid: 73337e8c70133be46886aad64643191b, type: 3}
       propertyPath: m_Name
       value: zynthium
