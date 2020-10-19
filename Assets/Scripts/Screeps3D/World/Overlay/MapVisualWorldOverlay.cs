@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
+using Assets.Scripts.Screeps_API.ConsoleClientAbuse;
 using Assets.Scripts.Screeps3D;
 using Assets.Scripts.Screeps3D.World.Views;
 using Common;
@@ -8,6 +11,7 @@ using Screeps_API;
 using Screeps3D.Player;
 using Screeps3D.Rooms;
 using Screeps3D.Rooms.Views;
+using Unity.VectorGraphics;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,6 +28,8 @@ namespace Screeps3D.World.Views
         private Queue<JSONObject> queue = new Queue<JSONObject>();
 
         private Dictionary<string, WorldView> _views = new Dictionary<string, WorldView>();
+
+        [SerializeField] private Material _AlphaCutMaterial = default;
 
         // TODO: we will initialize a list of OwnerControllerLevelViewData
         public MapVisualWorldOverlay()
@@ -116,11 +122,11 @@ namespace Screeps3D.World.Views
 
         private void UnpackMapVisuals(JSONObject data)
         {
-            ////// debug to allow testing
-            ////if (_parent.transform.childCount > 0)
-            ////{
-            ////    return;
-            ////}
+            // debug to allow testing
+            if (_parent.transform.childCount > 0)
+            {
+                return;
+            }
 
             foreach (Transform child in _parent.transform)
             {
@@ -132,7 +138,7 @@ namespace Screeps3D.World.Views
             //data = new JSONObject(data.str)
 
             //Debug.LogError("UnpackMapVisuals: " + data.ToString());
-            var list = data.str.Replace("\\\"", "\"").Split(new string[] { "}\\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var list = data?.str?.Replace("\\\"", "\"")?.Split(new string[] { "}\\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var visual in list)
             {
@@ -268,7 +274,7 @@ namespace Screeps3D.World.Views
             var firstPoint = points.FirstOrDefault();
             points.Add(firstPoint);
 
-            var go = new GameObject($"rect-", typeof(LineRenderer)); // TODO: should probably render it with something else than a line renderer to get support for fill and stroke.
+            var go = new GameObject($"poly-", typeof(LineRenderer)); // TODO: should probably render it with something else than a line renderer to get support for fill and stroke.
             go.transform.SetParent(_parent);
             //go.transform.position = firstPoint + Vector3.up * OverlayHeight;
             //go.transform.position = room.Position + new Vector3(25, OverlayHeight, 25); // Center of the room;
@@ -344,7 +350,7 @@ namespace Screeps3D.World.Views
             line.SetPositions(points);
         }
 
-        private static void DrawCircle(JSONObject item)
+        private void DrawCircle(JSONObject item)
         {
             var x = item["x"];
             var y = item["y"];
@@ -361,45 +367,44 @@ namespace Screeps3D.World.Views
             var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
             var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
 
-            var go = new GameObject($"circle-{n.str}-{x.n}-{y.n}-{room.Position.ToString()}", typeof(LineRenderer)); // TODO: should probably render it with something else than a line renderer to get support for fill and stroke.
+            var go = new GameObject($"circle-{n.str}-{x.n}-{y.n}-{room.Position.ToString()}", typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
-            go.transform.position = room.Position + new Vector3(25, OverlayHeight, 25); // Center of the room;
-
-            var line = go.GetComponent<LineRenderer>();
-            line.material = new Material(_lineShader);
-
-            if (stroke == null  || !ColorUtility.TryParseHtmlString(stroke.str, out var strokeColor))
-            {
-                strokeColor = Color.white; // default should be no stroke
-            }
-
-            line.startColor = strokeColor;
-            line.endColor = strokeColor;
 
             //float lineWidth = 1f;
             float radius = radiusObject != null ? radiusObject.n : 10f;
+            go.transform.position = pos + new Vector3(-radius, OverlayHeight, -radius);
+            // TODO: figure out proper positions
 
-            // Calculate points in circle
-            var segments = 360;
-            line.useWorldSpace = false; // make it relative to the gameobject.
-            //line.startWidth = lineWidth;
-            //line.endWidth = lineWidth;
-            line.positionCount = segments + 1;
+            var w = radius*2;
+            var h = radius*2;
 
-            var pointCount = segments + 1; // add extra point to make startpoint and endpoint the same to close the circle
-            var points = new Vector3[pointCount];
+            string svgStrokeColor = GetSvgColor(stroke);
+            string svgStroke = string.IsNullOrEmpty(svgStrokeColor) ? "" : $" stroke=\"{svgStrokeColor}\"";
 
-            for (int i = 0; i < pointCount; i++)
-            {
-                var rad = Mathf.Deg2Rad * (i * 360f / segments);
-                points[i] = new Vector3((Mathf.Sin(rad) * radius), 0, (Mathf.Cos(rad) * radius));
-            }
+            // TODO: stroke-width
 
+            string svgFillColor = GetSvgColor(fill);
+            string svgFill = string.IsNullOrEmpty(svgFillColor) ? "" : $" fill=\"{svgFillColor}\"";
 
-            line.SetPositions(points);
+            // TODO: we have an odd issue where the spaces between lines gets further and further
+            string svgLineStyle = GetSvgLineStyle(lineStyle);
+
+            string xml = $@"<svg height=""{w*2}"" width=""{h*2}"">
+              <circle cx=""{radius}"" cy=""{radius}"" r=""{radius}""{svgStroke}{svgFill}{svgLineStyle} />
+            </svg>";
+
+            //Debug.LogError(xml);
+
+            var meshFilter = go.GetComponent<MeshFilter>();
+
+            // TODO: generate it in such a way that we can position the quad and it is relative to the position (center i think)
+            Mesh mesh = GenerateQuad(w, h);
+
+            meshFilter.mesh = mesh;
+            SetTexture(go, xml);
         }
 
-        private static void DrawLine(JSONObject item)
+        private void DrawLine(JSONObject item)
         {
             var x1 = item["x1"]; // X
             var y1 = item["y1"]; // Y
@@ -412,21 +417,161 @@ namespace Screeps3D.World.Views
 
             var room2 = RoomManager.Instance.Get(n2.str, PlayerPosition.Instance.ShardName);
             var pos2 = PosUtility.Convert((int)x2.n, (int)y2.n, room2) + Vector3.up * OverlayHeight;
+
             var style = item["s"]; // optional
             var width = style != null ? style["width"] : null; // number, default is 0.1
             var color = style != null ? style["color"] : null; // hex color code, default is #ffffff
             var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
             var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
 
-            var go = new GameObject($"line", typeof(LineRenderer));
+            var go = new GameObject($"line", typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
-            go.transform.position = room1.Position + new Vector3(25, OverlayHeight, 25); // Center of the room
 
-            var line = go.GetComponent<LineRenderer>();
-            line.material = new Material(_lineShader);
+            var w = Math.Abs(pos1.x - pos2.x);
+            var h = Math.Abs(pos1.z - pos2.z);
+            go.transform.position = room1.Position + new Vector3(-(w) + 25, OverlayHeight, 25);
 
-            //line.useWorldSpace = false; // make it relative to the gameobject.
-            line.SetPositions(new Vector3[] { pos1, pos2 });
+            string svgHexColor = GetSvgColor(color);
+
+            // TODO: we have an odd issue where the spaces between lines gets further and further
+            string svgLineStyle = GetSvgLineStyle(lineStyle);
+
+            string xml = $@"<svg height=""{w}"" width=""{h}"">
+              <line x1=""0"" y1=""0"" x2=""{w}"" y2=""{h}"" {svgLineStyle} style=""stroke:{svgHexColor};stroke-width:2"" />
+            </svg>";
+
+            //Debug.LogError(xml);
+
+            var meshFilter = go.GetComponent<MeshFilter>();
+
+            Mesh mesh = GenerateQuad(w, h);
+
+            meshFilter.mesh = mesh;
+            SetTexture(go, xml);
+        }
+
+        private void SetTexture(GameObject go, string xml)
+        {
+            var texture = Texturize(xml);
+
+            var rend = go.GetComponent<MeshRenderer>();
+            var mat = new Material(_AlphaCutMaterial);
+
+            mat.SetTexture(ShaderKeys.HDRPLit.Texture, texture);
+            rend.material = mat;
+        }
+
+        private static string GetSvgLineStyle(JSONObject lineStyle)
+        {
+            var svgLineStyle = "";
+
+            if (lineStyle == null)
+            {
+                return svgLineStyle;
+            }
+
+            // TODO: we have an odd issue where dash-array stretches further and further the longer it runs
+            switch (lineStyle.str)
+            {
+                case "dashed":
+                    svgLineStyle = " stroke-dasharray=\"5,5\"";
+                    break;
+                case "dotted":
+                    svgLineStyle = " stroke-dasharray=\"2,2\"";
+                    break;
+            }
+
+            return svgLineStyle;
+        }
+
+        private static string GetSvgColor(JSONObject color)
+        {
+            var svgHexColor = color != null ? color.str : string.Empty;
+
+            if (string.IsNullOrEmpty(svgHexColor))
+            {
+                // hex color code, default is #ffffff
+                return "#ffffff";
+            }
+
+            if (!svgHexColor.StartsWith("#") && svgHexColor != "transparent")
+            {
+                var colorInfo = ColorToHex.Parse(svgHexColor);
+                if (colorInfo != null)
+                {
+                    svgHexColor = colorInfo.Hex;
+                }
+            }
+
+            return svgHexColor;
+        }
+
+        private static Mesh GenerateQuad(float w, float h)
+        {
+            Mesh mesh = new Mesh();
+
+            Vector3[] vertices = new Vector3[4]
+            {
+                new Vector3(0, 0, 0),
+                new Vector3(w, 0, 0),
+                new Vector3(0, 0, h),
+                new Vector3(w, 0, h)
+            };
+            mesh.vertices = vertices;
+
+            int[] tris = new int[6]
+            {
+                // lower left triangle
+                0, 2, 1,
+                // upper right triangle
+                2, 3, 1
+            };
+            mesh.triangles = tris;
+
+            Vector3[] normals = new Vector3[4]
+            {
+                -Vector3.forward,
+                -Vector3.forward,
+                -Vector3.forward,
+                -Vector3.forward
+            };
+            mesh.normals = normals;
+
+            Vector2[] uv = new Vector2[4]
+            {
+                  new Vector2(0, 0),
+                  new Vector2(1, 0),
+                  new Vector2(0, 1),
+                  new Vector2(1, 1)
+            };
+            mesh.uv = uv;
+            return mesh;
+        }
+
+        private static Texture2D Texturize(string xml)
+        {
+            // From BadgeManager
+            using (var reader = new StringReader(xml))
+            {
+                var sceneInfo = SVGParser.ImportSVG(reader);
+
+                var geometry = VectorUtils.TessellateScene(sceneInfo.Scene, new VectorUtils.TessellationOptions
+                {
+                    // https://docs.unity3d.com/Packages/com.unity.vectorgraphics@1.0/manual/index.html
+                    // Theese options needs to be set, else it fails
+                    StepDistance = 10f,
+                    SamplingStepSize = 100f,
+                    MaxCordDeviation = 0.5f,
+                    MaxTanAngleDeviation = 0.1f
+                });
+
+                var sprite = VectorUtils.BuildSprite(geometry, 1, VectorUtils.Alignment.Center, Vector2.zero, 0, true);
+
+                // var mat = new Material(Shader.Find("Unlit/VectorGradient"));
+                var mat = new Material(Shader.Find("Unlit/Vector"));
+
+                return VectorUtils.RenderSpriteToTexture2D(sprite, 1024, 1024, mat);
+            }
         }
 
         ////private void LoadViewsByPlayerPosition()
