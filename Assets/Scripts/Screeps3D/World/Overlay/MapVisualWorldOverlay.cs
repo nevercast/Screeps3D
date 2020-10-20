@@ -634,7 +634,7 @@ namespace Screeps3D.World.Views
                 {
                     // https://docs.unity3d.com/Packages/com.unity.vectorgraphics@1.0/manual/index.html
                     // Theese options needs to be set, else it fails
-                    StepDistance = 10f,
+                    StepDistance = 0.1f, // This gives a smoothe circle, gotta figure out how high we can go.
                     SamplingStepSize = 100f,
                     MaxCordDeviation = 0.5f,
                     MaxTanAngleDeviation = 0.1f
