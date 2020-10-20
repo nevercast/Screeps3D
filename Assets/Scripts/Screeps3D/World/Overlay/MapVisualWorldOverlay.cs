@@ -247,7 +247,7 @@ namespace Screeps3D.World.Views
              * */
         }
 
-        private static void DrawPoly(JSONObject item)
+        private void DrawPoly(JSONObject item)
         {
             var pointsObject = item["points"];
 
@@ -258,8 +258,11 @@ namespace Screeps3D.World.Views
             var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
             var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
 
-
             var points = new List<Vector3>();
+            var minX = 10f;
+            var maxX = 10f;
+            var minZ = 10f;
+            var maxZ = 10f;
 
             foreach (var point in pointsObject.list)
             {
@@ -268,36 +271,85 @@ namespace Screeps3D.World.Views
                 var n = point["n"];
 
                 var room = RoomManager.Instance.Get(n.str, PlayerPosition.Instance.ShardName);
-                var pos = PosUtility.Convert((int)x.n, (int)y.n, room) + Vector3.up * OverlayHeight;
-                points.Add(pos);
-            }
-            var firstPoint = points.FirstOrDefault();
-            points.Add(firstPoint);
+                var pointPos = PosUtility.Convert((int)x.n, (int)y.n, room);
+                points.Add(pointPos);
 
-            var go = new GameObject($"poly-", typeof(LineRenderer)); // TODO: should probably render it with something else than a line renderer to get support for fill and stroke.
+                if (pointPos.x < minX)
+                {
+                    minX = pointPos.x;
+                }
+
+                if (pointPos.x > maxX)
+                {
+                    maxX = pointPos.x;
+                }
+
+                if (pointPos.z < minZ)
+                {
+                    minZ = pointPos.z;
+                }
+
+                if (pointPos.z > maxZ)
+                {
+                    maxZ = pointPos.z;
+                }
+            }
+
+            var width = Math.Abs(minX - maxX) - 25;
+            var height = Math.Abs(minZ - maxZ) - 25;
+
+            var go = new GameObject($"poly-", typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
-            //go.transform.position = firstPoint + Vector3.up * OverlayHeight;
-            //go.transform.position = room.Position + new Vector3(25, OverlayHeight, 25); // Center of the room;
 
-            var line = go.GetComponent<LineRenderer>();
-            line.material = new Material(_lineShader);
+            // TODO: find top left position
+            // TODO: find width and height?
+            var pos = points.FirstOrDefault();
+            go.transform.position = pos + new Vector3(-width, OverlayHeight, 0);
 
-            if (stroke == null || !ColorUtility.TryParseHtmlString(stroke.str, out var strokeColor))
-            {
-                strokeColor = Color.white; // default should be no stroke
-            }
 
-            line.startColor = strokeColor;
-            line.endColor = strokeColor;
+            string svgStrokeColor = GetSvgColor(stroke);
+            string svgStroke = string.IsNullOrEmpty(svgStrokeColor) ? "" : $" stroke=\"{svgStrokeColor}\"";
 
-            line.material.SetColor(ShaderKeys.HDRPLit.Color, strokeColor);
+            // TODO: stroke-width
 
-            //line.useWorldSpace = false; // make it relative to the gameobject.
+            string svgFillColor = GetSvgColor(fill);
+            string svgFill = string.IsNullOrEmpty(svgFillColor) ? "" : $" fill=\"{svgFillColor}\"";
 
+            // TODO: Figure out how to render svg opacity "properly" :S
+            string svgOpacity = (opacity != null && !string.IsNullOrEmpty(opacity.str)) ? opacity.str : "0.5";
+
+            string svgFillOpacity = $" fill-opacity=\"{svgOpacity}\""; //0..1
+            string svgStrokeOpacity = $" stroke-opacity=\"{svgOpacity}\""; //0..1 // TODO: this basicly hides the line :thinking:
+            // wonder if fill="rgba(124,240,10,0.5)" works better :thinking:
+
+            // https://forum.unity.com/threads/vector-graphics-preview-package.529845/page-2
+            // https://stackoverflow.com/questions/62044261/svg-opacity-in-unity
+            // perhaps we need a giant canvas, or at least a canvas, to embed the gameobject onto? :thinking:
+
+            // TODO: we have an odd issue where the spaces between lines gets further and further
+            string svgLineStyle = GetSvgLineStyle(lineStyle);
             
+            // TODO: Points are relative to 0,0 (top left) how do we translate that ?
+            string svgPointsList = string.Join(" ", points.Select(p => $"{Math.Abs(p.x)},{Math.Abs(p.z)}"));
+            string svgPoints = $"points=\"{svgPointsList}\"";
 
-            line.positionCount = points.Count;
-            line.SetPositions(points.ToArray());
+            string xml = $@"<svg height=""{height * 2}"" width=""{width * 2}"">
+             <g transform=""rotate(180, 100, 100)"">
+              <polygon {svgPoints}{svgStroke}{svgFill}{svgLineStyle}{svgFillOpacity}{svgStrokeOpacity} />
+             </g>
+            </svg>";
+
+            Debug.LogError(xml);
+
+            var meshFilter = go.GetComponent<MeshFilter>();
+
+            // TODO: could generate a mesh that is actually the correct shape :thinking:
+            Mesh mesh = GenerateQuad(width, height);
+
+            meshFilter.mesh = mesh;
+
+            // TODO: figure out how we disable lighting, maybe it should be an unlit shader? nope, culling does not work ....
+            SetTexture(go, xml);
         }
 
 
