@@ -301,7 +301,7 @@ namespace Screeps3D.World.Views
         }
 
 
-        private static void DrawRectangle(JSONObject item)
+        private void DrawRectangle(JSONObject item)
         {
             var x = item["x"];
             var y = item["y"];
@@ -310,7 +310,7 @@ namespace Screeps3D.World.Views
             var h = item["h"];
 
             var room = RoomManager.Instance.Get(n.str, PlayerPosition.Instance.ShardName);
-            var pos = PosUtility.Convert((int)x.n, (int)y.n, room);
+            var pos = PosUtility.Convert((int)x.n, (int)y.n, room); // The position object of the top-left corner.
 
             var style = item["s"]; // optional
             var fill = style != null ? style["fill"] : null;  // hex color code, default is #ffffff
@@ -319,35 +319,52 @@ namespace Screeps3D.World.Views
             var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
             var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
 
-            var go = new GameObject($"rect-{n.str}-{x.n}-{y.n}", typeof(LineRenderer)); // TODO: should probably render it with something else than a line renderer to get support for fill and stroke.
+            var go = new GameObject($"rect-{n.str}-{x.n}-{y.n}", typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
-            go.transform.position = pos + Vector3.up * OverlayHeight;
-            //go.transform.position = room.Position + new Vector3(25, OverlayHeight, 25); // Center of the room;
+            // required, what if they are null? does screeps crash?
+            var width = w != null ? w.n : 25; 
+            var height = h != null ? h.n : 25;
+            //Debug.LogError($"{width} {height}");
+            go.transform.position = pos + new Vector3(0, OverlayHeight, -height);
 
-            var line = go.GetComponent<LineRenderer>();
-            line.material = new Material(_lineShader);
 
-            if (stroke == null || !ColorUtility.TryParseHtmlString(stroke.str, out var strokeColor))
-            {
-                strokeColor = Color.white; // default should be no stroke
-            }
+            string svgStrokeColor = GetSvgColor(stroke);
+            string svgStroke = string.IsNullOrEmpty(svgStrokeColor) ? "" : $" stroke=\"{svgStrokeColor}\"";
 
-            line.startColor = strokeColor;
-            line.endColor = strokeColor;
+            // TODO: stroke-width
 
-            line.material.SetColor(ShaderKeys.HDRPLit.Color, strokeColor);
+            string svgFillColor = GetSvgColor(fill);
+            string svgFill = string.IsNullOrEmpty(svgFillColor) ? "" : $" fill=\"{svgFillColor}\"";
 
-            line.useWorldSpace = false; // make it relative to the gameobject.
+            // TODO: Figure out how to render svg opacity "properly" :S
+            string svgOpacity = (opacity != null && !string.IsNullOrEmpty(opacity.str)) ? opacity.str : "0.5";
+            
+            string svgFillOpacity = $" fill-opacity=\"{svgOpacity}\""; //0..1
+            string svgStrokeOpacity = $" stroke-opacity=\"{svgOpacity}\""; //0..1 // TODO: this basicly hides the line :thinking:
+            // wonder if fill="rgba(124,240,10,0.5)" works better :thinking:
 
-            var points = new Vector3[5];
-            points[0] = new Vector3(0, 0, 0);
-            points[1] = new Vector3(w.n, 0, 0);
-            points[2] = new Vector3(w.n, 0, -h.n);
-            points[3] = new Vector3(0, 0, -h.n);
-            points[4] = new Vector3(0, 0, 0);
+            // https://forum.unity.com/threads/vector-graphics-preview-package.529845/page-2
+            // https://stackoverflow.com/questions/62044261/svg-opacity-in-unity
+            // perhaps we need a giant canvas, or at least a canvas, to embed the gameobject onto? :thinking:
 
-            line.positionCount = points.Length;
-            line.SetPositions(points);
+            // TODO: we have an odd issue where the spaces between lines gets further and further
+            string svgLineStyle = GetSvgLineStyle(lineStyle);
+
+            string xml = $@"<svg height=""{width * 2}"" width=""{height * 2}"">
+              <rect width=""{width}"" height=""{height}"" {svgStroke}{svgFill}{svgLineStyle}{svgFillOpacity}{svgStrokeOpacity} />
+            </svg>";
+
+            //Debug.LogError(xml);
+
+            var meshFilter = go.GetComponent<MeshFilter>();
+
+            // TODO: generate it in such a way that we can position the quad and it is relative to the position (center i think)
+            Mesh mesh = GenerateQuad(width, height);
+
+            meshFilter.mesh = mesh;
+
+            // TODO: figure out how we disable lighting, maybe it should be an unlit shader? nope, culling does not work ....
+            SetTexture(go, xml);
         }
 
         private void DrawCircle(JSONObject item)
@@ -386,11 +403,16 @@ namespace Screeps3D.World.Views
             string svgFillColor = GetSvgColor(fill);
             string svgFill = string.IsNullOrEmpty(svgFillColor) ? "" : $" fill=\"{svgFillColor}\"";
 
+            // TODO: Figure out how to render svg opacity "properly" :S
+            string svgOpacity = (opacity != null && !string.IsNullOrEmpty(opacity.str)) ? opacity.str : "0.5";
+            string svgFillOpacity = $" fill-opacity=\"{svgOpacity}\""; //0..1
+            string svgStrokeOpacity = $" stroke-opacity=\"{svgOpacity}\""; //0..1 // TODO: this basicly hides the line :thinking:
+
             // TODO: we have an odd issue where the spaces between lines gets further and further
             string svgLineStyle = GetSvgLineStyle(lineStyle);
 
             string xml = $@"<svg height=""{w*2}"" width=""{h*2}"">
-              <circle cx=""{radius}"" cy=""{radius}"" r=""{radius}""{svgStroke}{svgFill}{svgLineStyle} />
+              <circle cx=""{radius}"" cy=""{radius}"" r=""{radius}""{svgStroke}{svgFill}{svgLineStyle}{svgFillOpacity}{svgStrokeOpacity} />
             </svg>";
 
             //Debug.LogError(xml);
@@ -456,6 +478,7 @@ namespace Screeps3D.World.Views
 
             var rend = go.GetComponent<MeshRenderer>();
             var mat = new Material(_AlphaCutMaterial);
+            rend.receiveShadows = false;
 
             mat.SetTexture(ShaderKeys.HDRPLit.Texture, texture);
             rend.material = mat;
