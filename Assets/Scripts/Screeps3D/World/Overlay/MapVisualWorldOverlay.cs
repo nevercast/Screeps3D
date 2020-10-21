@@ -11,6 +11,7 @@ using Screeps_API;
 using Screeps3D.Player;
 using Screeps3D.Rooms;
 using Screeps3D.Rooms.Views;
+using TMPro;
 using Unity.VectorGraphics;
 using UnityEditor;
 using UnityEngine;
@@ -167,6 +168,7 @@ namespace Screeps3D.World.Views
                         DrawPoly(item);
                         break;
                     case "t": // text
+                        DrawText(item);
                         break;
                 }
             }
@@ -245,6 +247,60 @@ namespace Screeps3D.World.Views
                 }
 
              * */
+        }
+
+        private void DrawText(JSONObject item)
+        {
+            var x = item["x"];
+            var y = item["y"];
+            var n = item["n"];
+            var text = item["text"];
+
+            var room = RoomManager.Instance.Get(n.str, PlayerPosition.Instance.ShardName);
+            var pos = PosUtility.Convert((int)x.n, (int)y.n, room); // The position object of the top-left corner.
+
+
+            var style = item["s"]; // optional
+            // color string Font color in the following format: #ffffff (hex triplet). Default is #ffffff.
+            var color = style != null ? style["color"] : null;
+            // fontFamily string The font family, default is sans-serif
+            // fontSize number The font size in game coordinates, default is 10
+            // fontStyle string The font style ('normal', 'italic' or 'oblique')
+            // fontVariant string The font variant ('normal' or 'small-caps')
+            // stroke string Stroke color in the following format: #ffffff (hex triplet). Default is undefined (no stroke).
+            var stroke = style != null ? style["stroke"] : null; 
+            // strokeWidth number Stroke width, default is 0.15.
+            var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
+            // backgroundColor string Background color in the following format: #ffffff (hex triplet). Default is undefined (no background). When background is enabled, text vertical align is set to middle (default is baseline).
+            // backgroundPadding number Background rectangle padding, default is 2.
+            // align string Text align, either center, left, or right. Default is center.
+            // opacity number Opacity value, default is 0.5.
+            var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
+
+            // TODO: TMP
+            var go = new GameObject($"text-");
+            go.transform.SetParent(_parent);
+            go.transform.Rotate(new Vector3(90, 0, 0));
+
+
+            var tmpText = go.AddComponent<TextMeshPro>();
+            
+            Debug.LogError(item.ToString());
+            Debug.LogError(text.ToString());
+            tmpText.text = ScreepsConsole.RemoveEscapes(text.str);
+            tmpText.ForceMeshUpdate();
+            var renderedValues = tmpText.GetRenderedValues(false);
+            Debug.LogError(tmpText.textBounds.center.y);
+            go.transform.position = pos + new Vector3(0, OverlayHeight, renderedValues.y*2);
+            Debug.LogError(tmpText.text);
+            tmpText.fontSize = 10 * 7; // what if the text is longer than "Target"
+            tmpText.autoSizeTextContainer = true;
+            tmpText.color = GetColor(color);
+
+            var strokeColor = GetColor(stroke);
+            
+            // TODO: Figure out how to render svg opacity "properly" :S
+            string svgOpacity = (opacity != null && !string.IsNullOrEmpty(opacity.str)) ? opacity.str : "0.5";
         }
 
         private void DrawPoly(JSONObject item)
@@ -339,7 +395,7 @@ namespace Screeps3D.World.Views
              </g>
             </svg>";
 
-            Debug.LogError(xml);
+            //Debug.LogError(xml);
 
             var meshFilter = go.GetComponent<MeshFilter>();
 
@@ -557,6 +613,33 @@ namespace Screeps3D.World.Views
             }
 
             return svgLineStyle;
+        }
+
+        private static Color GetColor(JSONObject json)
+        {
+            var colorString = json != null ? json.str : string.Empty;
+
+            if (string.IsNullOrEmpty(colorString))
+            {
+                // hex color code, default is #ffffff
+                return Color.white;
+            }
+
+            if (!colorString.StartsWith("#"))
+            {
+                var colorInfo = ColorToHex.Parse(colorString);
+                if (colorInfo != null)
+                {
+                    colorString = colorInfo.Hex;
+                }
+            }
+
+            if (ColorUtility.TryParseHtmlString(colorString, out var color))
+            {
+                return color;
+            }
+
+            return Color.white;
         }
 
         private static string GetSvgColor(JSONObject color)
