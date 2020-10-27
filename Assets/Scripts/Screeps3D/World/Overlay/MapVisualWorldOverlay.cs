@@ -124,15 +124,10 @@ namespace Screeps3D.World.Views
         private void UnpackMapVisuals(JSONObject data)
         {
             // debug to allow testing
-            if (_parent.transform.childCount > 0)
-            {
-                return;
-            }
-
-            foreach (Transform child in _parent.transform)
-            {
-                Destroy(child.gameObject);
-            }
+            ////if (_parent.transform.childCount > 0)
+            ////{
+            ////    return;
+            ////}
 
             // https://en.wikipedia.org/wiki/JSON_streaming is used for map visuals it appears to be newline delimted.
             // 
@@ -140,13 +135,27 @@ namespace Screeps3D.World.Views
 
             //Debug.LogError("UnpackMapVisuals: " + data.ToString());
             var list = data?.str?.Replace("\\\"", "\"")?.Split(new string[] { "}\\n" }, StringSplitOptions.RemoveEmptyEntries);
-
+            var hashes = new List<string>();
             foreach (var visual in list)
             {
+                
+
                 //Debug.LogError($"visual: {visual}");
                 var item = new JSONObject(visual + "}" /* add end of json object back */);
                 //Debug.LogError($"{item.ToString()}");
                 var type = item["t"]; // l = line, c = circle, r = rectangle ,p = poly, t = text
+
+                // TODO: generate a unique hash for the visuals, if we already render it, no need to generate a new one.
+                var hash = GenerateVisualHash(item);
+
+                var existingVisual = _parent.Find(hash);
+
+                if (existingVisual != null)
+                {
+                    //Debug.LogError($"Adding {hash} to list and skipping");
+                    hashes.Add(hash);
+                    continue;
+                }
 
                 // TODO: being able to generate a visual room object is something that should be extracted out and utilized for room visuals as well
                 // We might need a general purpose "View" factory, that ObjectViewFactory and WorldViewFactory could inherit from
@@ -154,102 +163,70 @@ namespace Screeps3D.World.Views
                 {
                     case "l": // line
 
-                        DrawLine(item);
+                        DrawLine(hash, item);
 
                         break;
                     case "c": // circle
-                        DrawCircle(item);
+                        DrawCircle(hash, item);
 
                         break;
                     case "r": // rectangle
-                        DrawRectangle(item);
+                        DrawRectangle(hash, item);
                         break;
                     case "p": // poly
-                        DrawPoly(item);
+                        DrawPoly(hash, item);
                         break;
                     case "t": // text
-                        DrawText(item);
+                        DrawText(hash, item);
                         break;
+                }
+
+                //Debug.LogError($"Adding {hash} to list");
+                hashes.Add(hash);
+            }
+
+            // clear old visuals not present in this unpack.
+            foreach (Transform child in _parent.transform)
+            {
+                if (!hashes.Contains(child.name))
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+        }
+
+        private string GenerateVisualHash(JSONObject item)
+        {
+            // loop all keys, string values together? in case of another object(style) return that data as well?
+            var hash = new StringBuilder();
+
+            foreach (var key in item.keys)
+            {
+                var value = item[key];
+
+                if (value.IsObject)
+                {
+                    // TODO: recursive
+                    continue;
+                }
+
+                if (value.IsString)
+                {
+                    hash.Append(value.str);
+                    continue;
+                }
+
+                if (value.IsNumber)
+                {
+                    hash.Append(value.n);
+                    continue;
                 }
             }
 
-
-            // TODO: should probably produce a hash of the data to detect if the visual is already present. this would also mean we would have to clean up the visuals that we did not recieve though.
-            /* We seem to be recieving a "list" of objects, that are not seperated.
-             * 
-             * {
-	                "t": "l",
-	                "x1": 25,
-	                "y1": 25,
-	                "n1": "W8N1",
-	                "x2": 25,
-	                "y2": 25,
-	                "n2": "W8N2",
-	                "s": {
-		                "color": "#ff0000",
-		                "lineStyle": "dashed"
-	                }
-                }{
-	                "t": "c",
-	                "x": 25,
-	                "y": 25,
-	                "n": "W2N4"
-                }{
-	                "t": "c",
-	                "x": 25,
-	                "y": 25,
-	                "n": "W8N1",
-	                "s": {
-		                "fill": "transparent",
-		                "radius": 500,
-		                "stroke": "#ff0000"
-	                }
-                }{
-	                "t": "r",
-	                "x": 13,
-	                "y": 2,
-	                "n": "W1N4",
-	                "w": 11,
-	                "h": 11,
-	                "s": {
-		                "fill": "transparent",
-		                "stroke": "#ff0000"
-	                }
-                }{
-	                "t": "p",
-	                "points": [{
-			                "x": 25,
-			                "y": 25,
-			                "n": "W8N1"
-		                }, {
-			                "x": 25,
-			                "y": 25,
-			                "n": "W8N2"
-		                }, {
-			                "x": 20,
-			                "y": 21,
-			                "n": "W1N1"
-		                }
-	                ],
-	                "s": {
-		                "fill": "aqua"
-	                }
-                }{
-	                "t": "t",
-	                "text": "Target💥",
-	                "x": 11,
-	                "y": 14,
-	                "n": "W2N4",
-	                "s": {
-		                "color": "#FF0000",
-		                "fontSize": 10
-	                }
-                }
-
-             * */
+            return hash.ToString();
         }
 
-        private void DrawText(JSONObject item)
+        private void DrawText(string hash, JSONObject item)
         {
 
             // TODO: text does not really scale the same way as in the official client.
@@ -280,20 +257,20 @@ namespace Screeps3D.World.Views
             // opacity number Opacity value, default is 0.5.
             var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
 
-            var go = new GameObject($"text-");
+            var go = new GameObject(hash);
             go.transform.SetParent(_parent);
             go.transform.Rotate(new Vector3(90, 0, 0));
 
             var tmpText = go.AddComponent<TextMeshPro>();
             
-            Debug.LogError(item.ToString());
-            Debug.LogError(text.ToString());
+            //Debug.LogError(item.ToString());
+            //Debug.LogError(text.ToString());
             tmpText.text = ScreepsConsole.RemoveEscapes(text.str);
             tmpText.ForceMeshUpdate();
             var renderedValues = tmpText.GetRenderedValues(false);
-            Debug.LogError(tmpText.textBounds.center.y);
+            //Debug.LogError(tmpText.textBounds.center.y);
             go.transform.position = pos + new Vector3(0, OverlayHeight, renderedValues.y*2);
-            Debug.LogError(tmpText.text);
+            //Debug.LogError(tmpText.text);
             tmpText.fontSize = 10 * 8; // what if the text is longer than "Target"
             tmpText.autoSizeTextContainer = true;
             tmpText.color = GetColor(color);
@@ -304,7 +281,7 @@ namespace Screeps3D.World.Views
             string svgOpacity = (opacity != null && !string.IsNullOrEmpty(opacity.str)) ? opacity.str : "0.5";
         }
 
-        private void DrawPoly(JSONObject item)
+        private void DrawPoly(string hash, JSONObject item)
         {
             // TODO: might want to add other polygon renderings for the testcases to verify if the magic numbers work as intended in most cases.
             var pointsObject = item["points"];
@@ -356,7 +333,7 @@ namespace Screeps3D.World.Views
             var width = Math.Abs(minX - maxX) - 37.5f; // somewhat random magical values, should probably find a better solution
             var height = Math.Abs(minZ - maxZ) - 12.5f;
 
-            var go = new GameObject($"poly-", typeof(MeshFilter), typeof(MeshRenderer));
+            var go = new GameObject(hash, typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
 
             // TODO: find width and height?
@@ -410,7 +387,7 @@ namespace Screeps3D.World.Views
         }
 
 
-        private void DrawRectangle(JSONObject item)
+        private void DrawRectangle(string hash, JSONObject item)
         {
             var x = item["x"];
             var y = item["y"];
@@ -428,7 +405,7 @@ namespace Screeps3D.World.Views
             var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
             var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
 
-            var go = new GameObject($"rect-{n.str}-{x.n}-{y.n}", typeof(MeshFilter), typeof(MeshRenderer));
+            var go = new GameObject(hash, typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
             // required, what if they are null? does screeps crash?
             var width = w != null ? w.n : 25; 
@@ -476,7 +453,7 @@ namespace Screeps3D.World.Views
             SetTexture(go, xml);
         }
 
-        private void DrawCircle(JSONObject item)
+        private void DrawCircle(string hash, JSONObject item)
         {
             var x = item["x"];
             var y = item["y"];
@@ -493,7 +470,7 @@ namespace Screeps3D.World.Views
             var strokeWidth = style != null ? style["strokeWidth"] : null; // number, default is 0.5
             var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
 
-            var go = new GameObject($"circle-{n.str}-{x.n}-{y.n}-{room.Position.ToString()}", typeof(MeshFilter), typeof(MeshRenderer));
+            var go = new GameObject(hash, typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
 
             //float lineWidth = 1f;
@@ -535,7 +512,7 @@ namespace Screeps3D.World.Views
             SetTexture(go, xml);
         }
 
-        private void DrawLine(JSONObject item)
+        private void DrawLine(string hash, JSONObject item)
         {
             var x1 = item["x1"]; // X
             var y1 = item["y1"]; // Y
@@ -555,7 +532,7 @@ namespace Screeps3D.World.Views
             var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
             var lineStyle = style != null ? style["lineStyle"] : null; // string, undefined = solid line, dashed or dotted, default is undefined.
 
-            var go = new GameObject($"line", typeof(MeshFilter), typeof(MeshRenderer));
+            var go = new GameObject(hash, typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
 
             var w = Math.Abs(pos1.x - pos2.x);
@@ -787,3 +764,76 @@ namespace Screeps3D.World.Views
     ////    public RoomInfo RoomInfo { get; }
     ////}
 }
+
+/* We seem to be recieving a "list" of objects, that are not seperated.
+             * 
+             * {
+	                "t": "l",
+	                "x1": 25,
+	                "y1": 25,
+	                "n1": "W8N1",
+	                "x2": 25,
+	                "y2": 25,
+	                "n2": "W8N2",
+	                "s": {
+		                "color": "#ff0000",
+		                "lineStyle": "dashed"
+	                }
+                }{
+	                "t": "c",
+	                "x": 25,
+	                "y": 25,
+	                "n": "W2N4"
+                }{
+	                "t": "c",
+	                "x": 25,
+	                "y": 25,
+	                "n": "W8N1",
+	                "s": {
+		                "fill": "transparent",
+		                "radius": 500,
+		                "stroke": "#ff0000"
+	                }
+                }{
+	                "t": "r",
+	                "x": 13,
+	                "y": 2,
+	                "n": "W1N4",
+	                "w": 11,
+	                "h": 11,
+	                "s": {
+		                "fill": "transparent",
+		                "stroke": "#ff0000"
+	                }
+                }{
+	                "t": "p",
+	                "points": [{
+			                "x": 25,
+			                "y": 25,
+			                "n": "W8N1"
+		                }, {
+			                "x": 25,
+			                "y": 25,
+			                "n": "W8N2"
+		                }, {
+			                "x": 20,
+			                "y": 21,
+			                "n": "W1N1"
+		                }
+	                ],
+	                "s": {
+		                "fill": "aqua"
+	                }
+                }{
+	                "t": "t",
+	                "text": "Target💥",
+	                "x": 11,
+	                "y": 14,
+	                "n": "W2N4",
+	                "s": {
+		                "color": "#FF0000",
+		                "fontSize": 10
+	                }
+                }
+
+             * */
