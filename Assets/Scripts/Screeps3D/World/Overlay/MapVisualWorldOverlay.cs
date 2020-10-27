@@ -251,6 +251,9 @@ namespace Screeps3D.World.Views
 
         private void DrawText(JSONObject item)
         {
+
+            // TODO: text does not really scale the same way as in the official client.
+
             var x = item["x"];
             var y = item["y"];
             var n = item["n"];
@@ -277,11 +280,9 @@ namespace Screeps3D.World.Views
             // opacity number Opacity value, default is 0.5.
             var opacity = style != null ? style["opacity"] : null; // number, default is 0.5
 
-            // TODO: TMP
             var go = new GameObject($"text-");
             go.transform.SetParent(_parent);
             go.transform.Rotate(new Vector3(90, 0, 0));
-
 
             var tmpText = go.AddComponent<TextMeshPro>();
             
@@ -293,7 +294,7 @@ namespace Screeps3D.World.Views
             Debug.LogError(tmpText.textBounds.center.y);
             go.transform.position = pos + new Vector3(0, OverlayHeight, renderedValues.y*2);
             Debug.LogError(tmpText.text);
-            tmpText.fontSize = 10 * 7; // what if the text is longer than "Target"
+            tmpText.fontSize = 10 * 8; // what if the text is longer than "Target"
             tmpText.autoSizeTextContainer = true;
             tmpText.color = GetColor(color);
 
@@ -305,6 +306,7 @@ namespace Screeps3D.World.Views
 
         private void DrawPoly(JSONObject item)
         {
+            // TODO: might want to add other polygon renderings for the testcases to verify if the magic numbers work as intended in most cases.
             var pointsObject = item["points"];
 
             var style = item["s"]; // optional
@@ -351,13 +353,12 @@ namespace Screeps3D.World.Views
                 }
             }
 
-            var width = Math.Abs(minX - maxX) - 25;
-            var height = Math.Abs(minZ - maxZ) - 25;
+            var width = Math.Abs(minX - maxX) - 37.5f; // somewhat random magical values, should probably find a better solution
+            var height = Math.Abs(minZ - maxZ) - 12.5f;
 
             var go = new GameObject($"poly-", typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_parent);
 
-            // TODO: find top left position
             // TODO: find width and height?
             var pos = points.FirstOrDefault();
             go.transform.position = pos + new Vector3(-width, OverlayHeight, 0);
