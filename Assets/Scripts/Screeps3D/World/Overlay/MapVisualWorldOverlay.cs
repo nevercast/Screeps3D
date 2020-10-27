@@ -484,7 +484,14 @@ namespace Screeps3D.World.Views
             string svgStrokeColor = GetSvgColor(stroke);
             string svgStroke = string.IsNullOrEmpty(svgStrokeColor) ? "" : $" stroke=\"{svgStrokeColor}\"";
 
-            // TODO: stroke-width
+            // TODO: strokes are having a bad time being rendered, I might need to make a test project and submit a bug report to unity :thinking:
+            if (strokeWidth == null || !float.TryParse(strokeWidth.str,out var svgStrokeWidth))
+            {
+                svgStrokeWidth = 0.5f;
+            }
+            svgStrokeWidth *= 3;
+
+            string svgStrokeWidthAttribute = $" stroke-width=\"{svgStrokeWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)}\"";
 
             string svgFillColor = GetSvgColor(fill);
             string svgFill = string.IsNullOrEmpty(svgFillColor) ? "" : $" fill=\"{svgFillColor}\"";
@@ -497,11 +504,11 @@ namespace Screeps3D.World.Views
             // TODO: we have an odd issue where the spaces between lines gets further and further
             string svgLineStyle = GetSvgLineStyle(lineStyle);
 
-            string xml = $@"<svg height=""{w*2}"" width=""{h*2}"">
-              <circle cx=""{radius}"" cy=""{radius}"" r=""{radius}""{svgStroke}{svgFill}{svgLineStyle}{svgFillOpacity}{svgStrokeOpacity} />
+            string xml = $@"<svg height=""{w}"" width=""{h}"">
+              <circle cx=""{radius}"" cy=""{radius}"" r=""{radius}""{svgStroke}{svgFill}{svgLineStyle}{svgFillOpacity}{svgStrokeOpacity}{svgStrokeWidthAttribute} />
             </svg>";
 
-            //Debug.LogError(xml);
+            Debug.LogError(xml);
 
             var meshFilter = go.GetComponent<MeshFilter>();
 
