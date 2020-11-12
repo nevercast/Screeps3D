@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -245,6 +245,7 @@ namespace Screeps3D.World.Views
             var color = style != null ? style["color"] : null;
             // fontFamily string The font family, default is sans-serif
             // fontSize number The font size in game coordinates, default is 10
+            var fontSize = style != null ? style["fontSize"] : null;
             // fontStyle string The font style ('normal', 'italic' or 'oblique')
             // fontVariant string The font variant ('normal' or 'small-caps')
             // stroke string Stroke color in the following format: #ffffff (hex triplet). Default is undefined (no stroke).
@@ -271,7 +272,7 @@ namespace Screeps3D.World.Views
             //Debug.LogError(tmpText.textBounds.center.y);
             go.transform.position = pos + new Vector3(0, OverlayHeight, renderedValues.y*2);
             //Debug.LogError(tmpText.text);
-            tmpText.fontSize = 10 * 8; // what if the text is longer than "Target"
+            tmpText.fontSize = (fontSize != null ? (int)fontSize.n : 10) * 8; // what if the text is longer than "Target"
             tmpText.autoSizeTextContainer = true;
             tmpText.color = GetColor(color);
 
