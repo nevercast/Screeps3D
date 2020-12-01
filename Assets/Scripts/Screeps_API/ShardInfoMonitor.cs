@@ -50,6 +50,8 @@ namespace Assets.Scripts.Screeps_API
                 {
                     // tickrates and such, what about private servers?
                     var shardInfoData = new JSONObject(jsonShardInfo);
+                    //Debug.LogError(shardInfoData);
+
                     var shardsData = shardInfoData["shards"];
                     if (shardsData == null)
                     {
@@ -60,7 +62,8 @@ namespace Assets.Scripts.Screeps_API
                     var shards = shardsData.list;
                     foreach (var shard in shards)
                     {
-                        var tickRateString = shard["tick"].n;
+                        //var shardTick = shard["tick"];
+                        //var tickRateString = shardTick != null ? shardTick.n : 0;
 
                         var shardNameObject = shard["name"];
 
@@ -115,8 +118,8 @@ namespace Assets.Scripts.Screeps_API
             while (true)
             {
                 shardInfo.Time += 1;
-
-                yield return new WaitForSecondsRealtime((float)shardInfo.AverageTick / 1000);
+                var averageTick = (float)(shardInfo.AverageTick ?? 1);
+                yield return new WaitForSecondsRealtime(averageTick / 1000);
             }
         }
     }
@@ -137,11 +140,15 @@ namespace Assets.Scripts.Screeps_API
                 return;
             }
 
-            // should be a float, but it seems like something is wrong when parsing json?
-            var tickRateString = info["tick"].n.ToString();
-            if (float.TryParse(tickRateString, out var tickRate))
+            var tickRateObject = info["tick"];
+            if (tickRateObject != null)
             {
-                this.AverageTick = tickRate; // for some reason .n in the jsonobject returns a really really wonky float.. :S
+                // should be a float, but it seems like something is wrong when parsing json?
+                var tickRateString = tickRateObject.n.ToString();
+                if (float.TryParse(tickRateString, out var tickRate))
+                {
+                    this.AverageTick = tickRate; // for some reason .n in the jsonobject returns a really really wonky float.. :S
+                } 
             }
 
             this.TimeUpdated = DateTime.Now;

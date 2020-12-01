@@ -17,10 +17,11 @@ namespace Screeps3D.RoomObjects.Views
                 Debug.LogError("found null type, is there a caching problem?");
                 return null;
             }
-            var view = GetFromPool(roomObject.Type);
+            var type = string.Format("{0}{1}", roomObject.OverrideTypePath, roomObject.Type);
+            var view = GetFromPool(type);
             if (!view)
             {
-                view = NewInstance(roomObject.Type);
+                view = NewInstance(type);
             }
             return view;
         }
@@ -59,7 +60,9 @@ namespace Screeps3D.RoomObjects.Views
 
         public void AddToPool(ObjectView objectView)
         {
-            var pool = GetPool(objectView.RoomObject.Type);
+            var roomObject = objectView.RoomObject;
+            var type = string.Format("{0}{1}", roomObject.OverrideTypePath, roomObject.Type);
+            var pool = GetPool(type);
             pool.Push(objectView);
         }
     }

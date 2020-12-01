@@ -45,6 +45,9 @@ namespace Assets.Scripts.Screeps_API.ServerListProviders
                         var port = GetValueOrdefault(server, "port") ?? (secure ? "443" : "21025"); // TODO: this default logic belongs in the connection handler.
                         var ptr = bool.Parse(GetValueOrdefault(server, "ptr") ?? "false");
                         var sim = bool.Parse(GetValueOrdefault(server, "sim") ?? "false"); // if true, skip
+                        var season = bool.Parse(GetValueOrdefault(server, "season") ?? "false"); // if true, skip
+                        
+                        var path = GetValueOrdefault(server, "path");
 
                         var token = GetValueOrdefault(server, "token");
                         var username = GetValueOrdefault(server, "username");
@@ -67,15 +70,25 @@ namespace Assets.Scripts.Screeps_API.ServerListProviders
                             cachedServer.Address.Path = "/ptr";
                         }
 
+                        if (season)
+                        {
+                            cachedServer.Address.Path = "/season";
+                        }
+
                         // Assist with merging
                         if (host.EndsWith("screeps.com"))
                         {
                             cachedServer.Persist = true;
                             cachedServer.Type = SourceProviderType.Official;
                             cachedServer.Name = $"Screeps.com";
-                            if (ptr)
+                            if (ptr || path == "/ptr")
                             {
                                 cachedServer.Name = $"PTR " + cachedServer.Name;
+                            }
+
+                            if (season || path == "/season")
+                            {
+                                cachedServer.Name = $"SEASONAL " + cachedServer.Name;
                             }
                         }
 

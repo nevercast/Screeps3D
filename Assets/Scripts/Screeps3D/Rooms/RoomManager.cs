@@ -70,7 +70,7 @@ namespace Screeps3D.Rooms
             }
 
             var roomName = string.Format("{0}{1}{2}{3}", xDir, xCoord, yDir, yCoord);
-            var shardName = string.Format("shard{0}", origin.ShardNumber);
+            var shardName = origin.ShardName;
 
             return Get(roomName, shardName);
         }
