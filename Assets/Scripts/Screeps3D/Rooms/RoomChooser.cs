@@ -263,10 +263,10 @@ namespace Screeps3D.Rooms
             while (true)
             {
 
-                Debug.Log($"Finding rooms on shard {PlayerPosition.Instance.ShardName}");
-                if (!string.IsNullOrEmpty(PlayerPosition.Instance.ShardName) && MapStatsUpdater.Instance.RoomInfo.TryGetValue(PlayerPosition.Instance.ShardName, out var shardRoomInfo))
+                //Debug.Log($"Finding rooms on shard {PlayerPosition.Instance.ShardName}");
+                if (!pausedBecauseOfTwitchGoto && !string.IsNullOrEmpty(PlayerPosition.Instance.ShardName) && MapStatsUpdater.Instance.RoomInfo.TryGetValue(PlayerPosition.Instance.ShardName, out var shardRoomInfo))
                 {
-                    Debug.Log($"{shardRoomInfo.Count} rooms found");
+                    //Debug.Log($"{shardRoomInfo.Count} rooms found");
                     /*
                      * early game just track the rooms with the highest RCL
                         And/or the players with the highest GCL
