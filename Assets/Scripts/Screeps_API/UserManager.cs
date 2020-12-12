@@ -9,6 +9,8 @@ namespace Screeps_API
     {
         private Dictionary<string, ScreepsUser> _users = new Dictionary<string, ScreepsUser>();
 
+        private object _lockObj = new object();
+
         public ScreepsUser GetUser(string id)
         {
             if (id == null)
@@ -29,66 +31,69 @@ namespace Screeps_API
         
         internal ScreepsUser CacheUser(JSONObject data)
         {
-            // Handle using GetUserByName
-            if (data["user"] != null)
+            lock (_lockObj)
             {
-                data = data["user"];
-            }
-
-            var id = data["_id"].str;
-            
-            if (_users.ContainsKey(id)) return _users[id];
-
-            Texture2D badge = null;
-            var isNpc = false;
-            var badgeData = data["badge"];
-            SvgParams badgeParams = null;
-            if (badgeData != null)
-            {
-                badge = ScreepsAPI.Badges.Generate(badgeData, out badgeParams);
-            } 
-            else
-            {
-                isNpc = true;
-                badge = ScreepsAPI.Badges.Invader;
-            }
-
-            var username = "unknown"; 
-            var nameData = data["username"];
-            if (nameData != null)
-            {
-                username = nameData.str;
-            }
-
-            var cpu = 10;
-            var cpuData = data["cpu"];
-            if (cpuData != null)
-            {
-                cpu = (int) cpuData.n;
-            }
-
-            var user = new ScreepsUser(id, username, cpu, badge, isNpc);
-
-            if (badgeParams != null)
-            {
-                if (ColorUtility.TryParseHtmlString(badgeParams.color1, out var color1))
+                // Handle using GetUserByName
+                if (data["user"] != null)
                 {
-                    user.BadgeColor1 = color1;
+                    data = data["user"];
                 }
 
-                if (ColorUtility.TryParseHtmlString(badgeParams.color2, out var color2))
+                var id = data["_id"].str;
+
+                if (_users.ContainsKey(id)) return _users[id];
+
+                Texture2D badge = null;
+                var isNpc = false;
+                var badgeData = data["badge"];
+                SvgParams badgeParams = null;
+                if (badgeData != null)
                 {
-                    user.BadgeColor2 = color2;
+                    badge = ScreepsAPI.Badges.Generate(badgeData, out badgeParams);
+                }
+                else
+                {
+                    isNpc = true;
+                    badge = ScreepsAPI.Badges.Invader;
                 }
 
-                if (ColorUtility.TryParseHtmlString(badgeParams.color3, out var color3))
+                var username = "unknown";
+                var nameData = data["username"];
+                if (nameData != null)
                 {
-                    user.BadgeColor3 = color3;
+                    username = nameData.str;
                 }
+
+                var cpu = 10;
+                var cpuData = data["cpu"];
+                if (cpuData != null)
+                {
+                    cpu = (int)cpuData.n;
+                }
+
+                var user = new ScreepsUser(id, username, cpu, badge, isNpc);
+
+                if (badgeParams != null)
+                {
+                    if (ColorUtility.TryParseHtmlString(badgeParams.color1, out var color1))
+                    {
+                        user.BadgeColor1 = color1;
+                    }
+
+                    if (ColorUtility.TryParseHtmlString(badgeParams.color2, out var color2))
+                    {
+                        user.BadgeColor2 = color2;
+                    }
+
+                    if (ColorUtility.TryParseHtmlString(badgeParams.color3, out var color3))
+                    {
+                        user.BadgeColor3 = color3;
+                    }
+                }
+
+                _users[id] = user;
+                return user; 
             }
-
-            _users[id] = user;
-            return user;
         }
 
         internal ScreepsUser GetUserByName(string username)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Screeps_API;
@@ -111,10 +112,10 @@ namespace Screeps_API
             // {"ok":1,"room":["shard3/E19S38"]}
 
             //Http.Request("GET", "/api/game/time", null, SetTime);
-            
+
             // Initialize things related to shard....
             // TOOD: world start room is called to figure out what room to load in case we never selected a room :thinking: but what if you had selected a shard already in roomchooser?
-            Http.Request("GET", "/api/user/world-start-room", null, GetShardSetTime);
+            StartCoroutine(WaitOnShardNamesAndSetTime());
             // GET /api/user/world-start-room?shard=shard0 is called when connecting to a private server after world-start-room is called
 
             // call room-status, but why?
@@ -129,6 +130,21 @@ namespace Screeps_API
 
             // after calling respawn, we should probably call get respawn prohibited rooms. we should also call it if status is empty
         }
+
+        private IEnumerator WaitOnShardNamesAndSetTime()
+        {
+            if (ScreepsAPI.IsConnected)
+            {
+                while (ScreepsAPI.ShardInfo.Count == 0)
+                {
+                    Debug.Log("Waiting on shardinfo to call /api/user/world-start-room");
+                    yield return new WaitForSeconds(1);
+                }
+
+                Http.Request("GET", "/api/user/world-start-room", null, GetShardSetTime);
+            }
+        }
+
         private void GetShardSetTime(string obj)
         {
             //Debug.Log(obj);
@@ -139,8 +155,12 @@ namespace Screeps_API
                 var firstRoomInfo = firstRoom.str.Split('/'); // on PS we don't recieve a shard, only the room name... so shard will be roomName...
                 var shard = firstRoomInfo[0];
 
-                WorldStartRooms = worldStartRooms.list.Select(x => x.str).ToList();
+                if (firstRoomInfo.Length == 1 && ShardInfo.Count == 1)
+                {
+                    shard = ShardInfo.ShardInfo.Keys.First();
+                }
 
+                WorldStartRooms = worldStartRooms.list.Select(x => x.str).ToList();
 
                 Http.Request("GET", $"/api/game/time?shard={shard}", null, SetTime);
             }

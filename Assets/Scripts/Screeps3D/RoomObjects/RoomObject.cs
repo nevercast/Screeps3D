@@ -10,6 +10,12 @@ namespace Screeps3D.RoomObjects
     {
         public string Id { get; set; }
         public string Type { get; set; }
+        
+        /// <summary>
+        /// Used to override the type path for alternatives / seasonal types
+        /// </summary>
+        public string OverrideTypePath { get; set; }
+
         public int X { get; set; }
         public int Y { get; set; }
         public string RoomName { get; set; }

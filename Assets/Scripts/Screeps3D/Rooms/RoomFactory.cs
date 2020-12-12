@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Screeps_API;
+using System;
+using UnityEngine;
 
 namespace Screeps3D.Rooms
 {
@@ -43,11 +45,33 @@ namespace Screeps3D.Rooms
             if (!parsed)
                 return null;
 
-            parsed = int.TryParse(shardName.Substring(5), out shard);
-            if (!parsed)
-                return null;
+            //parsed = int.TryParse(shardName.Substring(5), out shard);
+            //if (!parsed)
+            //    return null;
 
-            return new Room(roomName, shardName, xDir, yDir, shard, xCoord, yCoord);
+            // TODO: this needs to be redesigned, shardinfo should be fetched during connection, this is a temp fix for allowing seasonal to load rooms.
+            var shardLevel = 0;
+            var found = false;
+            foreach (var key in ScreepsAPI.ShardInfo.ShardInfo.Keys)
+            {
+                if (key == shardName)
+                {
+                    found = true;
+                    break;
+                }
+
+                shardLevel++;
+            }
+
+            if (!found)
+            {
+                // we assume there is only 1 shardlevel on ps if not found
+                shardLevel = 0;
+            }
+
+            //Debug.LogError($"{roomName} {shardName} shardLevel {shardLevel}");
+
+            return new Room(roomName, shardName, xDir, yDir, shardLevel, xCoord, yCoord);
         }
     }
 }

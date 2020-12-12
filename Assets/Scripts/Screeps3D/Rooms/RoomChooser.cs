@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Common;
+using Assets.Scripts.Common.SettingsManagement;
 using Assets.Scripts.Screeps_API.ConsoleClientAbuse;
 using Assets.Scripts.Screeps3D;
 using Assets.Scripts.Screeps3D.Rooms.Views;
@@ -47,8 +48,56 @@ namespace Screeps3D.Rooms
 
         private IEnumerator _findPvpRooms;
         private IEnumerator _findPlayerOwnedRooms;
+        private IEnumerator _findSeasonRooms;
 
         private bool pausedBecauseOfTwitchGoto = false;
+
+        private static event EventHandler<bool> OnEnableSpectate;
+
+        private static bool _ENABLE_SPECTATE = false;
+
+        [Setting("Gameplay/Spectate", "Enable")]
+        private static bool ENABLE_SPECTATE
+        {
+            get => _ENABLE_SPECTATE; set
+            {
+                //if (CmdArgs.ForceEnableTwitch)
+                //{
+                //    Debug.Log("Twitch is force enabled by -twitch argument");
+                //    _ENABLE_SPECTATE = true;
+                //}
+                //else
+                //{
+                //    _ENABLE_SPECTATE = value;
+                //}
+                Debug.Log($"_ENABLE_SPECTATE:{value}");
+                _ENABLE_SPECTATE = value;
+
+                OnEnableSpectate?.Invoke(null, _ENABLE_SPECTATE);
+            }
+        }
+
+        private static event EventHandler<bool> OnEnableSpectateSeason;
+
+        private static bool _ENABLE_SPECTATE_SEASON = false;
+
+        [Setting("Gameplay/Spectate", "Seasonal Spectate Mode")] // TODO: Spectate mode and a dropdown.
+        private static bool ENABLE_SPECTATE_SEASON
+        {
+            get => _ENABLE_SPECTATE_SEASON; set
+            {
+                Debug.Log($"_ENABLE_SPECTATE_SEASON:{value}");
+                _ENABLE_SPECTATE_SEASON = value;
+
+                OnEnableSpectateSeason?.Invoke(null, _ENABLE_SPECTATE_SEASON);
+            }
+        }
+
+        /// <summary>
+        /// The timer between switching rooms
+        /// </summary>
+        [Setting("Gameplay/Spectate", "Seasonal Spectate Timer", "Change the time between room swap")]
+        public static int SeasonTimerSwitch { get; private set; } = 60;
 
         private void Start()
         {
@@ -61,17 +110,60 @@ namespace Screeps3D.Rooms
             _roomInput.onDeselect.AddListener(OnToggleRoomList);
             _pvpSpectateToggle.onValueChanged.AddListener(OnTogglePvpSpectate);
             _SpectateToggle.onValueChanged.AddListener(OnToggleSpectate);
+            OnEnableSpectate += RoomChooser_OnEnableSpectate;
+            OnEnableSpectateSeason += RoomChooser_OnEnableSpectateSeason;
 
+            StartCoroutine(WaitOnShardNameAndInitializeChooser());
+
+            _roomList.Hide();
+        }
+
+        private void RoomChooser_OnEnableSpectateSeason(object sender, bool enabled)
+        {
+            if (enabled)
+            {
+                _findSeasonRooms = FindSeasonRoom();
+                StartCoroutine(_findSeasonRooms);
+            }
+            else
+            {
+                if (_findSeasonRooms != null)
+                {
+                    StopCoroutine(_findSeasonRooms);
+                }
+            }
+        }
+
+        private void RoomChooser_OnEnableSpectate(object sender, bool enabled)
+        {
+            if (enabled)
+            {
+                Debug.Log("Disabling place spawn overlay");
+                PlaceSpawnView.EnableOverlay = false;
+            }
+            else
+            {
+                Debug.Log("Enabling place spawn overlay");
+                PlaceSpawnView.EnableOverlay = true;
+            }
+        }
+
+        private IEnumerator WaitOnShardNameAndInitializeChooser()
+        {
             if (ScreepsAPI.IsConnected)
             {
+                while (ScreepsAPI.ShardInfo.Count == 0)
+                {
+                    Debug.Log("Waiting on shardinfo");
+                    yield return new WaitForSeconds(1);
+                }
+
                 ScreepsAPI.Http.GetRooms(ScreepsAPI.Me.UserId, InitializeChooser);
             }
             else
             {
                 throw new Exception("RoomChooser assumes ScreepsAPI.IsConnected == true at start of scene");
             }
-
-            _roomList.Hide();
         }
 
         private void Instance_OnGoToRoom(object sender, GoToRoomEventArgs e)
@@ -165,13 +257,71 @@ namespace Screeps3D.Rooms
             }
         }
 
+        private IEnumerator FindSeasonRoom()
+        {
+            Debug.Log("Find Season Room initialized");
+            while (true)
+            {
+
+                //Debug.Log($"Finding rooms on shard {PlayerPosition.Instance.ShardName}");
+                if (!pausedBecauseOfTwitchGoto && !string.IsNullOrEmpty(PlayerPosition.Instance.ShardName) && MapStatsUpdater.Instance.RoomInfo.TryGetValue(PlayerPosition.Instance.ShardName, out var shardRoomInfo))
+                {
+                    //Debug.Log($"{shardRoomInfo.Count} rooms found");
+                    /*
+                     * early game just track the rooms with the highest RCL
+                        And/or the players with the highest GCL
+                        Once score starts ticking in, track the top 10 players
+                        Focusing on combat and general claimed room stuff
+                        you probably would want to apportion airtime by sum of RCLs. (e.g. show a player with sumrcl 30 30 times more than a player with sumrcl 1
+                     */
+                    //var body = new RequestBody();
+                    //body.AddField("limit", "100");
+                    //body.AddField("offset", "0");
+
+                    //ScreepsAPI.Http.Request("GET", "/api/scoreboard/list", body, (jsonString) =>
+                    //{
+                    //var obj = new JSONObject(jsonString);
+                    //var users = obj["users"].list;
+
+                    //users.Sort((a, b) =>
+                    //{
+                    //    return (int)b.GetField("rank").n - (int)a.GetField("rank").n;
+                    //});
+
+                    var ownedRooms = shardRoomInfo.Where(r => r.Value.User != null && r.Value.User.UserId != Constants.InvaderUserId)
+                        .Select(r => r.Value);
+
+                        if (ownedRooms.Any())
+                        {
+                            var random = new System.Random();
+                            var room = ownedRooms.ElementAt(random.Next(ownedRooms.Count()));
+                            var roomName = room?.RoomName;
+
+                            Debug.Log($"Going to room {roomName} owned by {room?.User?.Username}");
+                            _roomInput.text = roomName;
+                            this.GetAndChooseRoom(roomName);
+                        }
+                        else
+                        {
+                            Debug.Log($"Could not find any owned rooms :/");
+                        }
+                    //});
+
+
+                }
+
+                Debug.Log($"season room swap Waiting for {SeasonTimerSwitch} seconds");
+                yield return new WaitForSeconds(SeasonTimerSwitch);
+            }
+        }
+
         private IEnumerator FindPlayerOwnedRoom()
         {
             while (true)
             {
                 if (MapStatsUpdater.Instance.RoomInfo.TryGetValue(PlayerPosition.Instance.ShardName, out var shardRoomInfo))
                 {
-                    var ownedRooms = shardRoomInfo.Where(r => r.Value.User != null && r.Value.User.UserId == ScreepsAPI.Me.UserId).Select(r=> r.Value);
+                    var ownedRooms = shardRoomInfo.Where(r => r.Value.User != null && r.Value.User.UserId == ScreepsAPI.Me.UserId).Select(r => r.Value);
 
                     if (ownedRooms.Any())
                     {
@@ -455,10 +605,11 @@ namespace Screeps3D.Rooms
         public void GetAndChooseRoom(string roomName)
         {
             // _roomInput.text
-            var room = RoomManager.Instance.Get(roomName, _shards[_shardInput.value]);
+            var shardName = _shards[_shardInput.value];
+            var room = RoomManager.Instance.Get(roomName, shardName);
             if (room == null)
             {
-                Debug.Log("invalid room");
+                Debug.Log($"invalid room {roomName} {shardName}");
                 return;
             }
 
@@ -537,7 +688,7 @@ namespace Screeps3D.Rooms
         {
             var obj = new JSONObject(str);
             int? defaultShardIndex = null;
-            string defaultRoom = ""; // TODO: get starter room endpoint if we have no rooms
+            string defaultRoom = ""; // TODO: get starter room endpoint if we have no rooms /api/user/world-start-room
 
             var shardObj = obj["shards"];
             if (shardObj != null)
@@ -573,26 +724,32 @@ namespace Screeps3D.Rooms
             }
             else
             {
-                const string shardName = "shard0";
-
                 _shardInput.gameObject.SetActive(false);
                 _shards.Clear();
-                _shards.Add(shardName);
+                var shardRooms = new List<string>();
+                foreach (var shardName in ScreepsAPI.ShardInfo.ShardInfo.Keys)
+                {
+                    _shards.Add(shardName);
+                }
                 _shardInput.value = 0;
 
-                var shardRooms = new List<string>();
-                _shardRooms.Add(shardName, shardRooms);
-
-                var roomObj = obj["rooms"];
-                if (roomObj != null && roomObj.list.Count > 0)
+                if (shardRooms.Count == 1)
                 {
-                    var roomList = roomObj.list;
-                    defaultRoom = roomList[0].str;
+                    // all rooms are returned if you are not spawned in for some reason
+                    var shardName = shardRooms.First();
+                    _shardRooms.Add(shardName, shardRooms);
 
-                    foreach (var room in roomList)
+                    var roomObj = obj["rooms"];
+                    if (roomObj != null && roomObj.list.Count > 0)
                     {
-                        shardRooms.Add(room.str);
-                        AddRoomToRoomListGameObject(shardName, room.str);
+                        var roomList = roomObj.list;
+                        defaultRoom = roomList[0].str;
+
+                        foreach (var room in roomList)
+                        {
+                            shardRooms.Add(room.str);
+                            AddRoomToRoomListGameObject(shardName, room.str);
+                        }
                     }
                 }
             }

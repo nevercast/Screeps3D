@@ -203,9 +203,13 @@ namespace Screeps3D
 
         private List<string> ScanSectorsAroundPlayer()
         {
+            var rooms = new List<string>();
+
             // TODO: scan less sectors
             var currentRoom = PlayerPosition.Instance.Room;
             // Generate roomnames allowing sectors to surround current room
+
+            if (currentRoom == null) { return rooms; }
 
             (int cX, int cY) = SectorCenterXYFromRoom(currentRoom.RoomName);
 
@@ -218,7 +222,7 @@ namespace Screeps3D
             var leftX = cX - (5 + gridRange * sectorWidth);
             var rightX = cX + (4 + gridRange * sectorWidth);
 
-            var rooms = new List<string>();
+            
             for (var yo = topY; yo <= bottomY; yo++)
             {
                 for (var xo = leftX; xo <= rightX; xo++)
