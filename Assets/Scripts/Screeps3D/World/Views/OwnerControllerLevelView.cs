@@ -40,9 +40,10 @@ namespace Assets.Scripts.Screeps3D.World.Views
         private int? _roomLevel = 0;
 
         [Setting("Overlay/Owner View", "Camera Height Threshold")]
-        public static float OverlayCameraHeightThreshold {
+        public static float OverlayCameraHeightThreshold
+        {
             get => overlayCameraHeightThreshold * -1;
-            set => overlayCameraHeightThreshold =  value * -1;
+            set => overlayCameraHeightThreshold = value * -1;
         }
 
         public void Init(object o)
@@ -74,7 +75,11 @@ namespace Assets.Scripts.Screeps3D.World.Views
 
         private void UpdateLevel()
         {
-            if (_roomLevel != data.RoomInfo.Level)
+            if (data.RoomInfo == null || (_roomLevel==0 && _controllerLevelImage.fillAmount != 0f))
+            {
+                _controllerLevelImage.fillAmount = 0f;
+            }
+            else if (_roomLevel != data.RoomInfo.Level)
             {
                 _roomLevel = data.RoomInfo.Level;
 
@@ -122,7 +127,7 @@ namespace Assets.Scripts.Screeps3D.World.Views
 
             if (_badgeScaledContent.transform.localScale.x != scale)
             {
-                _badgeScaledContent.transform.localScale = new Vector3(scale, scale, 1f); 
+                _badgeScaledContent.transform.localScale = new Vector3(scale, scale, 1f);
             }
         }
 
@@ -134,7 +139,7 @@ namespace Assets.Scripts.Screeps3D.World.Views
                 _badge.sprite = Sprite.Create(user.Badge,
                             new Rect(0.0f, 0.0f, BadgeManager.BADGE_SIZE, BadgeManager.BADGE_SIZE), new Vector2(.5f, .5f));
 
-                _username.text = user.Username; 
+                _username.text = user.Username;
             }
         }
 
@@ -150,7 +155,7 @@ namespace Assets.Scripts.Screeps3D.World.Views
             // if pivot.localRotation.x is 0.70 we are looking top down, 0 is at room level / in the ground, we need to determine some sort of treshhold
             // boom.position.z needs to be < - 200
             //Debug.Log(CameraRig.Position);
-            
+
 
             if (OverlayShouldBeShown(data?.RoomInfo?.User) && CameraHasCorrectHeight())
             {
