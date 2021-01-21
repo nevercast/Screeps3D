@@ -134,7 +134,7 @@ namespace Screeps3D.World.Views
             //data = new JSONObject(data.str)
 
             //Debug.LogError("UnpackMapVisuals: " + data.ToString());
-            var list = data?.str?.Replace("\\\"", "\"")?.Split(new string[] { "}\\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var list = data?.str?.Replace("\\\"", "\"")?.Split(new string[] { "}\\n" }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
             var hashes = new List<string>();
             foreach (var visual in list)
             {
