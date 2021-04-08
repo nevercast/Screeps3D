@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Assets.Scripts.Common.SettingsManagement;
 using Assets.Scripts.Screeps_API.ConsoleClientAbuse;
 using Assets.Scripts.Screeps3D;
 using Assets.Scripts.Screeps3D.World.Views;
@@ -31,6 +32,21 @@ namespace Screeps3D.World.Views
         private Dictionary<string, WorldView> _views = new Dictionary<string, WorldView>();
 
         [SerializeField] private Material _AlphaCutMaterial = default;
+
+        private static event EventHandler<bool> OnEnableMapVisuals;
+
+        private static bool _ENABLE_MAP_VISUALS = true;
+
+        [Setting("Overlay/(WIP) Map Visuals", "Enable")]
+        private static bool ENABLE_INTEGRATION
+        {
+            get => _ENABLE_MAP_VISUALS; set
+            {
+                _ENABLE_MAP_VISUALS = value;
+
+                OnEnableMapVisuals?.Invoke(null, _ENABLE_MAP_VISUALS);
+            }
+        }
 
         // TODO: we will initialize a list of OwnerControllerLevelViewData
         public MapVisualWorldOverlay()
@@ -88,6 +104,15 @@ namespace Screeps3D.World.Views
 
         private void Update()
         {
+            if (!_ENABLE_MAP_VISUALS)
+            {
+                foreach (Transform child in _parent.transform)
+                {
+                    child.gameObject.SetActive(false);
+                }
+                return;
+            }
+
             //Debug.LogError(this.GetInstanceID() + "MapVisuals:Update:" + queue.Count);
             if (queue.Count > 0)
             {
@@ -154,6 +179,11 @@ namespace Screeps3D.World.Views
                 {
                     //Debug.LogError($"Adding {hash} to list and skipping");
                     hashes.Add(hash);
+                    // Re-enable visual in case map visuals was toggled off
+                    if (!existingVisual.gameObject.activeSelf)
+                    {
+                        existingVisual.gameObject.SetActive(true);
+                    }
                     continue;
                 }
 
