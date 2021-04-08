@@ -380,9 +380,18 @@ namespace Screeps_API
                 {
                     foreach (var shard in shards.list)
                     {
-                        server.ShardNames.Add(shard.str);
+                        if (!shard.IsNull)
+                        {
+                            server.ShardNames.Add(shard.str);
+                        }
                     }
-                } 
+                }
+
+                if (server.ShardNames.Count == 0)
+                {
+                    // if server does not have a shardname set, version seems to return null
+                    server.ShardNames.Add("shard0");
+                }
             }
 
             server.Online = true;

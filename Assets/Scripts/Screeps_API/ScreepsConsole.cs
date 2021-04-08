@@ -11,7 +11,7 @@ namespace Screeps_API
         public Action<ConsoleMessage> OnConsoleMessage;
         public Action<string> OnConsoleError;
         public Action<string> OnConsoleResult;
-        
+
         private Queue<JSONObject> queue = new Queue<JSONObject>();
 
         internal List<IConsoleClientAbuse> consoleClientAbuses = new List<IConsoleClientAbuse>();
@@ -64,7 +64,7 @@ namespace Screeps_API
 
                         foreach (var abuser in consoleClientAbuses)
                         {
-                           abuser.Abuse(message);
+                            abuser.Abuse(message);
                         }
 
                         OnConsoleMessage(message);
@@ -93,13 +93,14 @@ namespace Screeps_API
             return str;
         }
 
-        private static string RemoveEscapes(string str)
+        public static string RemoveEscapes(string str)
         {
-            str = str.Replace("\\n", "\n");
-            str = str.Replace("\\\\", "\\");
-            // handle "html" <a href=\"...
-            str = str.Replace("\\\"", "\"");
-            return str;
+            return str
+                .Replace("\\\\n", "\n") // fix for mapvisuals
+                .Replace("\\n", "\n")
+                .Replace("\\\\", "\\")
+                // handle "html" <a href=\"...
+                .Replace("\\\"", "\"");
         }
 
         public class ConsoleMessage

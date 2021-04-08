@@ -47,8 +47,11 @@ namespace Assets.Scripts.Screeps_API
             Debug.Log("ShardInfoMonitor populating shardnames from cache");
             foreach (var shardName in ScreepsAPI.Cache.ShardNames)
             {
-                var shardInfo = new ShardInfoDto();
-                ShardInfo.Add(shardName, shardInfo);
+                if (shardName != null)
+                {
+                    var shardInfo = new ShardInfoDto();
+                    ShardInfo.Add(shardName, shardInfo); 
+                }
             }
 
             while (ScreepsAPI.IsConnected)
