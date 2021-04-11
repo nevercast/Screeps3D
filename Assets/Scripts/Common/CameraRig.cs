@@ -12,7 +12,7 @@ namespace Common
         [SerializeField] private int _rigLayer = default;
         [SerializeField] private float _defaultZoom = default;
         [SerializeField] private float _defaultAngle = default;
-        [Setting("Gameplay/Camera", "Zoom Speed", "The speed when scrolling")]
+        [Setting("Gameplay/Camera", "Mouse Scrolling Zoom Speed", "The speed when scrolling")]
         [SerializeField] private static float _zoomSpeed = 5;
         [SerializeField] private float _minZoom = 1;
         [SerializeField] private float _maxZoom = 400;
@@ -57,9 +57,15 @@ namespace Common
         private float _zoomRef;
         private Vector3 _posRef;
 
-        [Setting("Gameplay/Camera", "Room Keyboard Speed", "The speed when using WASD or arrow keys in room mode")]
-        private static float _keyboardSpeed = 5;
-        [Setting("Gameplay/Camera", "World Keyboard Speed", "The speed when using WASD or arrow keys in world mode")]
+        [Setting("Gameplay/Camera keyboard control", "Room Keyboard Move Speed(WASD/ArrowKeys)", "The speed when using WASD or arrow keys in room mode (for position)")]
+        private static float _keyboardSpeedMove = 5;
+        [Setting("Gameplay/Camera keyboard control", "Room Keyboard Rotation Speed(Q/E)", "The speed when using Q/E in room mode (for rotation)")]
+        private static float _keyboardSpeedRotation = 5;
+        [Setting("Gameplay/Camera keyboard control", "Room Keyboard Rotation Speed(Z/X)", "The speed when using Z/X in room mode (for zoom)")]
+        private static float _keyboardSpeedZoom = 5;
+        [Setting("Gameplay/Camera keyboard control", "Room Keyboardspeed decay ratio", "Speed decay ratio after you stop keyboard controlling rotation/zoom")]
+        private static float _keyboardSpeedmomentum = 0.95f;
+        [Setting("Gameplay/Camera keyboard control", "World Keyboard Speed", "The speed when using WASD or arrow keys in world mode")]
         private static float _worldKeyboardSpeed = 5; // TODO: implement
 
         private Vector3 _clickPos;
@@ -117,27 +123,58 @@ namespace Common
                 return;
 
             KeyboardPosition();
+            KeyboardZoom();
             KeyboardRotation();
         }
+
+        // save the current speen to calculate
+        private static float _keyboardZoomPre = 1.0f;
+        private static float _keyboardRotatePre = 1.0f;
+        // control the rotation/zoom direction
+        private static float _keyboardZoomDir = 1.0f;   
+        private static float _keyboardRotateDir = 1.0f;
 
         private void KeyboardPosition()
         {
             var cameraRotation = Quaternion.Euler(0, Camera.main.transform.rotation.eulerAngles.y, 0);
             var input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
             var heightFactor = Mathf.Log10(-_boom.localPosition.z + 1);
-            _targetPosition += cameraRotation * input * _keyboardSpeed * heightFactor * 10 * Time.deltaTime;
+            _targetPosition += cameraRotation * input * _keyboardSpeedMove * heightFactor * 5 * Time.deltaTime;
+        }
+
+        private void KeyboardZoom()
+        {
+            // if Z/X is pressed, use dir * speed, else use dir*momentum*speed to slow down smoothly
+            if (Input.GetKey(KeyCode.Z)){
+                _keyboardZoomPre = _keyboardSpeedZoom;
+                _keyboardZoomDir = 1.0f;
+            }
+            else if(Input.GetKey(KeyCode.X)){
+                _keyboardZoomPre = _keyboardSpeedZoom;
+                _keyboardZoomDir = -1.0f;
+            }
+            else{
+                _keyboardZoomPre = _keyboardZoomPre * _keyboardSpeedmomentum;
+            }
+            _targetZoom += 0.003f * _targetZoom / 2 * _keyboardZoomPre * _keyboardZoomDir;
+            _targetZoom = Mathf.Clamp(_targetZoom, _minZoom, _maxZoom);
         }
 
         private void KeyboardRotation()
         {
-            if (Input.GetKey(KeyCode.Q))
-            {
-                _targetRotation.y += 25 * _keyboardSpeed * Time.deltaTime;
+            // if Q/E is pressed, use dir * speed, else use dir*momentum*speed to slow down smoothly
+            if (Input.GetKey(KeyCode.Q)){
+                _keyboardRotatePre = _keyboardSpeedRotation;
+                _keyboardRotateDir = 1.0f;
             }
-            if (Input.GetKey(KeyCode.E))
-            {
-                _targetRotation.y -= 25 * _keyboardSpeed * Time.deltaTime;
+            else if(Input.GetKey(KeyCode.E)){
+                _keyboardRotatePre = _keyboardSpeedRotation;
+                _keyboardRotateDir = -1.0f;
             }
+            else{
+                _keyboardRotatePre = _keyboardRotatePre * _keyboardSpeedmomentum;
+            }
+            _targetRotation.y += 5 * Time.deltaTime * _keyboardRotatePre * _keyboardRotateDir;
         }
 
         private void MouseControl()
