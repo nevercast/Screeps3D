@@ -219,14 +219,11 @@ namespace Screeps3D.RoomObjects
 
                 // ----- POST STORE UPDATE 
 
-                var store = data.HasField("store") ? data["store"] : data; // this supports both PRE and POST store update
+                var store = data.HasField("store") ? data["store"] : null; // this supports both PRE and POST store update
 
-                if (store == null)
+                if (store != null && !store.IsNull)
                 {
                     obj.Store.Clear();
-                }
-                else if (!store.IsNull)
-                {
                     foreach (var resourceType in store.keys)
                     {
                         if (obj.Store.ContainsKey(resourceType))
