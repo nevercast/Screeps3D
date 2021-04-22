@@ -45,3 +45,4 @@ Thumbs.db
 dist/*
 *.blend1
 *.blend1.meta
+Logs/AssetImportWorker0.log
